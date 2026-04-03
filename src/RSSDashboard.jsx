@@ -12,6 +12,8 @@ const COLORS = {
 };
 
 const RSS2JSON = `https://api.rss2json.com/v1/api.json?api_key=${import.meta.env.VITE_RSS2JSON_API_KEY}&rss_url=`;
+const JSONBIN_ID = import.meta.env.VITE_JSONBIN_ID;
+const JSONBIN_KEY = import.meta.env.VITE_JSONBIN_KEY;
 
 const SOURCES = [
   { id: "cbc-top",  name: "CBC Top Stories",  category: "Mainstream",  url: "https://rss.cbc.ca/lineup/topstories.xml" },
@@ -67,6 +69,7 @@ export default function RSSDashboard() {
   const [customSources, setCustomSources] = useState(() => {
     try { return JSON.parse(localStorage.getItem("htn-custom-sources") || "[]"); } catch { return []; }
   });
+  const [saveStatus, setSaveStatus] = useState(null); // null | "saving" | "ok" | "error"
 
   const allSources = [...SOURCES, ...customSources];
 
@@ -120,6 +123,27 @@ export default function RSSDashboard() {
     else localStorage.removeItem("htn-hero");
   }
 
+  async function saveFeatured() {
+    const heroArticle = heroId ? articles.find(a => a.id === heroId) : null;
+    const featuredArticles = articles.filter(a => featured.includes(a.id) && a.id !== heroId);
+    const ordered = [...(heroArticle ? [heroArticle] : []), ...featuredArticles];
+    if (ordered.length === 0) return;
+    setSaveStatus("saving");
+    try {
+      const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_ID}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", "X-Master-Key": JSONBIN_KEY },
+        body: JSON.stringify({ articles: ordered }),
+      });
+      if (!res.ok) throw new Error();
+      setSaveStatus("ok");
+      setTimeout(() => setSaveStatus(null), 3000);
+    } catch {
+      setSaveStatus("error");
+      setTimeout(() => setSaveStatus(null), 4000);
+    }
+  }
+
   function addSource() {
     if (!newSourceUrl.trim() || !newSourceName.trim()) return;
     const newSource = { id: `custom-${Date.now()}`, name: newSourceName.trim(), category: "Custom", url: newSourceUrl.trim() };
@@ -167,9 +191,16 @@ export default function RSSDashboard() {
           <h1 style={{ margin: 0, fontSize: "1.8rem", letterSpacing: "0.1em", color: COLORS.red, lineHeight: 1 }}>HTN COMMAND</h1>
           <p style={{ margin: "0.2rem 0 0", color: COLORS.grey, fontSize: "0.7rem", letterSpacing: "0.1em" }}>EDITORIAL DASHBOARD · {articles.length} STORIES LOADED</p>
         </div>
-        <button onClick={fetchAll} disabled={loading} style={{ background: COLORS.red, color: COLORS.white, border: "none", borderRadius: "4px", padding: "0.5rem 1.2rem", fontSize: "0.85rem", fontWeight: 700, cursor: loading ? "not-allowed" : "pointer", letterSpacing: "0.08em", opacity: loading ? 0.7 : 1 }}>
-          {loading ? "⟳ LOADING..." : "↻ REFRESH"}
-        </button>
+        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+          {saveStatus === "ok" && <span style={{ color: "#4caf50", fontSize: "0.75rem", letterSpacing: "0.08em" }}>✓ PUSHED TO SITE</span>}
+          {saveStatus === "error" && <span style={{ color: COLORS.orange, fontSize: "0.75rem", letterSpacing: "0.08em" }}>✕ SAVE FAILED</span>}
+          <button onClick={saveFeatured} disabled={saveStatus === "saving" || (featured.length === 0 && !heroId)} style={{ background: "#1a4a1a", color: "#4caf50", border: "1px solid #4caf50", borderRadius: "4px", padding: "0.5rem 1.2rem", fontSize: "0.85rem", fontWeight: 700, cursor: "pointer", letterSpacing: "0.08em", opacity: (saveStatus === "saving" || (featured.length === 0 && !heroId)) ? 0.5 : 1 }}>
+            {saveStatus === "saving" ? "⟳ PUSHING..." : "↑ PUSH TO SITE"}
+          </button>
+          <button onClick={fetchAll} disabled={loading} style={{ background: COLORS.red, color: COLORS.white, border: "none", borderRadius: "4px", padding: "0.5rem 1.2rem", fontSize: "0.85rem", fontWeight: 700, cursor: loading ? "not-allowed" : "pointer", letterSpacing: "0.08em", opacity: loading ? 0.7 : 1 }}>
+            {loading ? "⟳ LOADING..." : "↻ REFRESH"}
+          </button>
+        </div>
       </div>
 
       {heroArticle && (
