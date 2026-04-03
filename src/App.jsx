@@ -1,9 +1,9 @@
-const JSONBIN_ID = import.meta.env.VITE_JSONBIN_ID;
-const JSONBIN_KEY = import.meta.env.VITE_JSONBIN_KEY;
+const JSONBIN_ID = "69ce762aaaba882197bac5e8";
+const JSONBIN_KEY = "$2a$10$zgUhIjKvnIfBRr6ODvYKPelyPF7RT4mdUeGESkP/PWNC019b149ia";
 
 import { useState, useEffect } from "react";
 import { Routes, Route, Navigate } from 'react-router-dom';
-import MapleLeafLoader from "./MapleLeafLoader";+
+import MapleLeafLoader from "./MapleLeafLoader";
 import RSSDashboard from "./RSSDashboard";
 const COLORS = {
   red: "#C8102E",
@@ -365,42 +365,16 @@ const rest = curated.slice(1);
       <span style={{ width: 8, height: 8, background: COLORS.red, borderRadius: "50%", display: "inline-block" }}></span>
       <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.15em", color: COLORS.white }}>HTN CURATED</span>
     </div>
-    <div style={{ display: "flex", flexDirection: "column", gap: "0", marginBottom: "2rem" }}>
-  {curated.map((a, i) => (
-    <a key={a.id} href={a.link} target="_blank" rel="noreferrer" style={{ textDecoration: "none" }}>
-      <div style={{
-        display: "flex", gap: "1rem", padding: "1rem 0",
-        borderBottom: `1px solid ${COLORS.border}`,
-        transition: "background 0.2s"
-      }}
-      onMouseEnter={e => e.currentTarget.style.background = COLORS.navyLight}
-      onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-      >
-        {a.image && (
-          <img src={a.image} alt="" onError={e => e.target.style.display="none"}
-            style={{ width: 140, height: 95, objectFit: "cover", flexShrink: 0, borderRadius: "3px" }} />
-        )}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.4rem", flexWrap: "wrap" }}>
-            <span style={{ background: COLORS.red, color: COLORS.white, fontSize: "0.6rem", padding: "0.15rem 0.4rem", letterSpacing: "0.08em", fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700 }}>{a.source}</span>
-            <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: "0.65rem", color: COLORS.grey }}>{timeAgo(a.pubDate)}</span>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: "1rem", marginBottom: "2rem" }}>
+      {curated.map(a => (
+        <a key={a.id} href={a.link} target="_blank" rel="noreferrer" style={{ textDecoration: "none" }}>
+          <div style={{ background: COLORS.navyMid, border: `1px solid ${COLORS.red}`, borderRadius: "6px", padding: "1rem" }}>
+            <span style={{ background: COLORS.red, color: COLORS.white, fontSize: "0.65rem", padding: "0.2rem 0.5rem", borderRadius: "3px", letterSpacing: "0.08em" }}>{a.source}</span>
+            <p style={{ color: COLORS.white, fontFamily: "'Barlow Condensed',sans-serif", fontSize: "1rem", fontWeight: 600, margin: "0.5rem 0 0", lineHeight: 1.3 }}>{a.title}</p>
           </div>
-          <p style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: "1rem", color: COLORS.white, lineHeight: 1.3, marginBottom: "0.4rem" }}>{a.title}</p>
-          {a.description && (
-            <p style={{ fontFamily: "'Source Serif 4',serif", fontSize: "0.82rem", color: COLORS.grey, lineHeight: 1.55, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-              {a.description.replace(/<[^>]*>/g, "")}
-            </p>
-          )}
-        </div>
-      </div>
-    </a>
-  ))}
-</div>
-```
-
-Save it, then in terminal:
-```
-git add . && git commit -m "AP News style layout with thumbnails" && git push
+        </a>
+      ))}
+    </div>
   </div>
 )}
   
