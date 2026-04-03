@@ -115,7 +115,7 @@ export default function HTNNews() {
   const [pwError, setPwError] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState(null);
-  const [form, setForm] = useState({ title: "", category: "canadian-politics", url: "", date: "", source: "", note: "", featured: false });
+  const [form, setForm] = useState({ title: "", category: "canadian-politics", url: "", date: "", source: "", note: "", imageUrl: "", featured: false });
   const [toast, setToast] = useState("");
   const [showLoader, setShowLoader] = useState(true);
   const [tickerPos, setTickerPos] = useState(0);
@@ -163,7 +163,7 @@ export default function HTNNews() {
   }
 
   function resetForm() {
-    setForm({ title: "", category: "canadian-politics", url: "", date: "", source: "", note: "", featured: false });
+    setForm({ title: "", category: "canadian-politics", url: "", date: "", source: "", note: "", imageUrl: "", featured: false });
     setEditId(null); setShowForm(false);
   }
 
@@ -188,8 +188,8 @@ export default function HTNNews() {
   const filtered = (activeCategory === "all" ? items : items.filter(i => i.category === activeCategory))
     .sort((a, b) => new Date(b.date) - new Date(a.date));
 
-  const featured = curated[0] || filtered[0];
-  const rest = curated.slice(1);
+  const featured = filtered[0];
+  const rest = filtered.slice(1);
 
   return (
     <>
@@ -257,7 +257,7 @@ export default function HTNNews() {
             <div style={{ display: "flex", gap: "0.5rem", flexShrink: 0 }}>
               {adminMode ? (
                 <>
-                  <button className="chip" style={{ color: COLORS.red, borderColor: "rgba(200,16,46,0.4)" }} onClick={() => { setShowForm(!showForm); setEditId(null); setForm({ title: "", category: "canadian-politics", url: "", date: "", source: "", note: "", featured: false }); setActivePage("news"); }}>+ Add</button>
+                  <button className="chip" style={{ color: COLORS.red, borderColor: "rgba(200,16,46,0.4)" }} onClick={() => { setShowForm(!showForm); setEditId(null); setForm({ title: "", category: "canadian-politics", url: "", date: "", source: "", note: "", imageUrl: "", featured: false }); setActivePage("news"); }}>+ Add</button>
                   <button className="chip del" onClick={() => { setAdminMode(false); resetForm(); }}>Exit</button>
                 </>
               ) : (
@@ -305,6 +305,7 @@ export default function HTNNews() {
                 <div><label className="fl">Source</label><input className="fi" value={form.source} onChange={e => setForm({ ...form, source: e.target.value })} placeholder="CBC, YouTube..." /></div>
               </div>
               <div style={{ marginBottom: "0.9rem" }}><label className="fl">URL</label><input className="fi" value={form.url} onChange={e => setForm({ ...form, url: e.target.value })} placeholder="https://..." /></div>
+              <div style={{ marginBottom: "0.9rem" }}><label className="fl">Image URL (optional)</label><input className="fi" value={form.imageUrl} onChange={e => setForm({ ...form, imageUrl: e.target.value })} placeholder="https://... (thumbnail or hero image)" /></div>
               <div style={{ marginBottom: "1rem" }}><label className="fl">Curator Note (optional)</label><textarea className="fi" style={{ resize: "vertical", minHeight: 80 }} value={form.note} onChange={e => setForm({ ...form, note: e.target.value })} placeholder="Why this story matters..." /></div>
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1.2rem" }}>
                 <input type="checkbox" id="feat" checked={form.featured} onChange={e => setForm({ ...form, featured: e.target.checked })} style={{ accentColor: COLORS.red }} />
@@ -366,24 +367,27 @@ export default function HTNNews() {
                       )}
 
                       <div className="sec-label" style={{ marginBottom: "0.9rem" }}><span className="live-dot" />Featured Story</div>
-                      <div style={{ background: COLORS.navyLight, border: `1px solid ${COLORS.border}`, borderTop: `3px solid ${getCatColor(featured.category)}`, padding: "1.8rem" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "0.7rem", marginBottom: "0.9rem", flexWrap: "wrap" }}>
-                          <span className="cat-tag" style={{ background: `${getCatColor(featured.category)}20`, color: getCatColor(featured.category) }}>{getCatLabel(featured.category)}</span>
-                          {isYT(featured.url) && <span className="cat-tag" style={{ background: "#FF000018", color: "#FF5555" }}>▶ Video</span>}
-                          <span className="meta">{timeAgo(featured.date)}{featured.source ? ` · ${featured.source}` : ""}</span>
-                        </div>
-                        <h2 style={{ fontFamily: "'Playfair Display',serif", fontWeight: 900, fontSize: "clamp(1.45rem,3vw,2.3rem)", color: COLORS.white, lineHeight: 1.15, marginBottom: "1rem" }}>{featured.title}</h2>
-                        {featured.note && <p className="note-text" style={{ marginBottom: "1.1rem" }}>{featured.note}</p>}
-                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "0.8rem" }}>
-                          <a href={featured.url} target="_blank" rel="noopener noreferrer" className="read-link">{isYT(featured.url) ? "▶ Watch Now" : "Read Full Story"} →</a>
-                          <span className="meta">{getDomain(featured.url)}</span>
-                        </div>
-                        {adminMode && (
-                          <div style={{ display: "flex", gap: "0.4rem", marginTop: "1rem", paddingTop: "1rem", borderTop: `1px solid ${COLORS.border}` }}>
-                            <button className="chip" onClick={() => handleEdit(featured)}>✎ Edit</button>
-                            <button className="chip del" onClick={() => handleDelete(featured.id)}>✕ Remove</button>
+                      <div style={{ background: COLORS.navyLight, border: `1px solid ${COLORS.border}`, borderTop: `3px solid ${getCatColor(featured.category)}`, overflow: "hidden" }}>
+                        {featured.imageUrl && <img src={featured.imageUrl} alt="" onError={e => { e.target.style.display = "none"; }} style={{ width: "100%", maxHeight: "360px", objectFit: "cover", display: "block" }} />}
+                        <div style={{ padding: "1.8rem" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "0.7rem", marginBottom: "0.9rem", flexWrap: "wrap" }}>
+                            <span className="cat-tag" style={{ background: `${getCatColor(featured.category)}20`, color: getCatColor(featured.category) }}>{getCatLabel(featured.category)}</span>
+                            {isYT(featured.url) && <span className="cat-tag" style={{ background: "#FF000018", color: "#FF5555" }}>▶ Video</span>}
+                            <span className="meta">{timeAgo(featured.date)}{featured.source ? ` · ${featured.source}` : ""}</span>
                           </div>
-                        )}
+                          <h2 style={{ fontFamily: "'Playfair Display',serif", fontWeight: 900, fontSize: "clamp(1.45rem,3vw,2.3rem)", color: COLORS.white, lineHeight: 1.15, marginBottom: "1rem" }}>{featured.title}</h2>
+                          {featured.note && <p className="note-text" style={{ marginBottom: "1.1rem" }}>{featured.note}</p>}
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "0.8rem" }}>
+                            <a href={featured.url} target="_blank" rel="noopener noreferrer" className="read-link">{isYT(featured.url) ? "▶ Watch Now" : "Read Full Story"} →</a>
+                            <span className="meta">{getDomain(featured.url)}</span>
+                          </div>
+                          {adminMode && (
+                            <div style={{ display: "flex", gap: "0.4rem", marginTop: "1rem", paddingTop: "1rem", borderTop: `1px solid ${COLORS.border}` }}>
+                              <button className="chip" onClick={() => handleEdit(featured)}>✎ Edit</button>
+                              <button className="chip del" onClick={() => handleDelete(featured.id)}>✕ Remove</button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   )}
@@ -392,7 +396,9 @@ export default function HTNNews() {
                       <div className="sec-label" style={{ marginBottom: "1rem" }}>Latest Stories</div>
                       <div className={loaded ? "s3" : ""} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(290px,1fr))", gap: "1px", background: COLORS.border }}>
                         {rest.map(item => (
-                          <div key={item.id} className="card" style={{ padding: "1.3rem" }}>
+                          <div key={item.id} className="card">
+                            {item.imageUrl && <img src={item.imageUrl} alt="" onError={e => { e.target.style.display = "none"; }} style={{ width: "100%", height: "160px", objectFit: "cover", display: "block" }} />}
+                            <div style={{ padding: "1.3rem", display: "flex", flexDirection: "column", flex: 1 }}>
                             <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.7rem", flexWrap: "wrap" }}>
                               <span className="cat-tag" style={{ background: `${getCatColor(item.category)}18`, color: getCatColor(item.category) }}>{getCatLabel(item.category)}</span>
                               {isYT(item.url) && <span className="cat-tag" style={{ background: "#FF000012", color: "#FF5555", fontSize: "0.58rem" }}>▶ VIDEO</span>}
@@ -409,6 +415,7 @@ export default function HTNNews() {
                                 <button className="chip del" onClick={() => handleDelete(item.id)}>✕</button>
                               </div>
                             )}
+                            </div>
                           </div>
                         ))}
                       </div>
