@@ -47,9 +47,6 @@ const SOURCES = [
   { id: "ling",     name: "Justin Ling",      category: "Independent", url: "https://justinling.substack.com/feed" },
   { id: "glavin",   name: "Terry Glavin",     category: "Independent", url: "https://therealstory.substack.com/feed" },
   { id: "rabble",   name: "Rabble.ca",        category: "Independent", url: "https://rabble.ca/feed" },
-  { id: "yt-angus", name: "Charlie Angus (YT)", category: "YouTube", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCKsAjgqGGJkfTBOFoqGLxOA" },
-  { id: "yt-canadaland", name: "Canadaland (YT)", category: "YouTube", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCgDpf1Lk4YCCSmWFGBbGRXg" },
-  { id: "yt-thetyee", name: "The Tyee (YT)", category: "YouTube", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCbRDVc6PqR8Q9FJTpJJUcHQ" },
 ];
 
 function parseDate(dateStr) {
@@ -110,14 +107,17 @@ export default function RSSDashboard() {
         const data = await res.json();
         if (!data.items) return;
         data.items.forEach(item => {
+          if (!item || !item.link) return;
           const ytId = getYTId(item.link);
-          const image = item.thumbnail || (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : null);
+          const image = (typeof item.thumbnail === "string" && item.thumbnail) || (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : null);
+          const rawDesc = typeof item.description === "string" ? item.description : "";
+          const description = rawDesc.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim().slice(0, 160) || "";
           results.push({
             id: item.link,
-            title: item.title,
+            title: item.title || "",
             link: item.link,
-            pubDate: item.pubDate,
-            description: item.description?.replace(/<[^>]*>/g, "").trim().slice(0, 150) || "",
+            pubDate: item.pubDate || "",
+            description,
             image,
             ytId: ytId || null,
             source: source.name,
@@ -219,7 +219,7 @@ export default function RSSDashboard() {
     );
   }
 
-  const categories = ["All", "Mainstream", "Independent", "Custom"];
+  const categories = ["All", "Mainstream", "Independent", "YouTube", "Custom"];
   const filtered = articles.filter(a => {
     const matchCat = activeFilter === "All" || a.category === activeFilter;
     const matchSearch = !search || a.title.toLowerCase().includes(search.toLowerCase()) || a.source.toLowerCase().includes(search.toLowerCase());
