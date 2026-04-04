@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { supabase } from "./supabase";
+import { useAuth } from "./AuthContext";
+import AuthModal from "./AuthModal";
 
 const JSONBIN_ID = import.meta.env.VITE_JSONBIN_ID;
 const JSONBIN_KEY = import.meta.env.VITE_JSONBIN_KEY;
@@ -31,9 +34,22 @@ function stripHtml(str) {
   return str ? str.replace(/<[^>]*>/g, "") : "";
 }
 
+function timeAgoFull(dateStr) {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  if (isNaN(d)) return "";
+  const diff = Math.floor((Date.now() - d) / 60000);
+  if (diff < 1) return "just now";
+  if (diff < 60) return `${Math.floor(diff)}m ago`;
+  if (diff < 1440) return `${Math.floor(diff / 60)}h ago`;
+  if (diff < 10080) return `${Math.floor(diff / 1440)}d ago`;
+  return d.toLocaleDateString("en-CA", { month: "short", day: "numeric" });
+}
+
 export default function StoryPage() {
   const { storyId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [article, setArticle] = useState(() => {
     try {
       const c = sessionStorage.getItem("htn-curated-cache");
@@ -42,6 +58,12 @@ export default function StoryPage() {
     } catch { return null; }
   });
   const [loading, setLoading] = useState(() => !sessionStorage.getItem("htn-curated-cache"));
+  const [comments, setComments] = useState([]);
+  const [commentsLoading, setCommentsLoading] = useState(true);
+  const [commentText, setCommentText] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [commentError, setCommentError] = useState("");
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   useEffect(() => {
     if (sessionStorage.getItem("htn-curated-cache")) return;
@@ -57,6 +79,37 @@ export default function StoryPage() {
       })
       .catch(() => setLoading(false));
   }, [storyId]);
+
+  const articleUrl = article?.link || decodeURIComponent(storyId);
+
+  useEffect(() => {
+    if (!articleUrl) return;
+    setCommentsLoading(true);
+    supabase
+      .from("comments")
+      .select("id, content, created_at, user_id, profiles(username)")
+      .eq("article_url", articleUrl)
+      .order("created_at", { ascending: false })
+      .then(({ data, error }) => {
+        if (!error && data) setComments(data);
+        setCommentsLoading(false);
+      });
+  }, [articleUrl]);
+
+  async function submitComment() {
+    if (!commentText.trim()) return;
+    setCommentError("");
+    setSubmitting(true);
+    const { data, error } = await supabase
+      .from("comments")
+      .insert({ user_id: user.id, article_url: articleUrl, content: commentText.trim() })
+      .select("id, content, created_at, user_id, profiles(username)")
+      .single();
+    setSubmitting(false);
+    if (error) { setCommentError("Failed to post comment. Please try again."); return; }
+    setComments(prev => [data, ...prev]);
+    setCommentText("");
+  }
 
   const isYT = url => url && (url.includes("youtube.com") || url.includes("youtu.be"));
 
@@ -158,25 +211,72 @@ export default function StoryPage() {
             {/* COMMENT SECTION */}
             <div>
               <p style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, fontSize: "0.68rem", letterSpacing: "0.22em", color: COLORS.grey, textTransform: "uppercase", display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "1.5rem" }}>
-                Discussion
+                Discussion {!commentsLoading && comments.length > 0 && <span style={{ color: COLORS.red }}>({comments.length})</span>}
                 <span style={{ flex: 1, height: 1, background: COLORS.border, display: "inline-block" }} />
               </p>
 
-              <div style={{ marginBottom: "1.5rem" }}>
-                <textarea className="comment-input" placeholder="Share your thoughts…" disabled />
-                <div>
-                  <button className="comment-submit" disabled>Post Comment</button>
+              {/* COMPOSE */}
+              {user ? (
+                <div style={{ marginBottom: "2rem" }}>
+                  <textarea
+                    className="comment-input"
+                    placeholder="Share your thoughts…"
+                    value={commentText}
+                    onChange={e => setCommentText(e.target.value)}
+                    onKeyDown={e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) submitComment(); }}
+                  />
+                  {commentError && (
+                    <p style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: "0.68rem", color: COLORS.red, letterSpacing: "0.06em", marginTop: "0.4rem" }}>{commentError}</p>
+                  )}
+                  <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginTop: "0.5rem" }}>
+                    <button className="comment-submit" onClick={submitComment} disabled={submitting || !commentText.trim()} style={{ opacity: submitting || !commentText.trim() ? 0.5 : 1, cursor: submitting || !commentText.trim() ? "not-allowed" : "pointer" }}>
+                      {submitting ? "Posting…" : "Post Comment"}
+                    </button>
+                    <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: "0.62rem", color: COLORS.grey, letterSpacing: "0.06em" }}>⌘↵ to submit</span>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div style={{ background: COLORS.navyLight, border: `1px solid ${COLORS.border}`, borderLeft: `3px solid ${COLORS.border}`, padding: "1rem 1.2rem", marginBottom: "2rem", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
+                  <p style={{ fontFamily: "'Source Serif 4',serif", fontSize: "0.88rem", color: COLORS.grey, margin: 0 }}>Sign in to join the discussion.</p>
+                  <button onClick={() => setShowAuthModal(true)} style={{ background: COLORS.red, border: "none", color: COLORS.white, padding: "0.5rem 1.1rem", fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, fontSize: "0.72rem", letterSpacing: "0.12em", textTransform: "uppercase", cursor: "pointer" }}>
+                    Sign In
+                  </button>
+                </div>
+              )}
 
-              <div style={{ background: COLORS.navyLight, border: `1px solid ${COLORS.border}`, borderRadius: "4px", padding: "2.5rem", textAlign: "center" }}>
-                <p style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: "0.75rem", letterSpacing: "0.1em", color: COLORS.grey, textTransform: "uppercase" }}>Comments coming soon</p>
-                <p style={{ fontFamily: "'Source Serif 4',serif", fontSize: "0.88rem", color: "#3A4A5A", marginTop: "0.5rem" }}>Community discussion will be available in an upcoming update.</p>
-              </div>
+              {/* COMMENTS LIST */}
+              {commentsLoading ? (
+                <div style={{ color: COLORS.grey, fontFamily: "'Barlow Condensed',sans-serif", fontSize: "0.75rem", letterSpacing: "0.08em", padding: "1rem 0" }}>Loading comments…</div>
+              ) : comments.length === 0 ? (
+                <div style={{ color: COLORS.grey, fontFamily: "'Source Serif 4',serif", fontSize: "0.88rem", fontStyle: "italic", padding: "1rem 0" }}>No comments yet. Be the first.</div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
+                  {comments.map((c, i) => (
+                    <div key={c.id} style={{ padding: "1.1rem 0", borderTop: `1px solid ${COLORS.border}`, ...(i === comments.length - 1 ? { borderBottom: `1px solid ${COLORS.border}` } : {}) }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "0.55rem" }}>
+                        <span style={{ width: 26, height: 26, borderRadius: "50%", background: COLORS.red, display: "inline-flex", alignItems: "center", justifyContent: "center", color: COLORS.white, fontSize: "0.7rem", fontWeight: 700, flexShrink: 0 }}>
+                          {(c.profiles?.username || "?")?.[0]?.toUpperCase()}
+                        </span>
+                        <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, fontSize: "0.78rem", letterSpacing: "0.06em", color: COLORS.greyLight }}>
+                          {c.profiles?.username || "Anonymous"}
+                        </span>
+                        <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: "0.65rem", color: COLORS.grey, letterSpacing: "0.04em" }}>
+                          {timeAgoFull(c.created_at)}
+                        </span>
+                      </div>
+                      <p style={{ fontFamily: "'Source Serif 4',serif", fontSize: "0.92rem", color: COLORS.offWhite, lineHeight: 1.65, margin: 0, paddingLeft: "2rem" }}>
+                        {c.content}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </>
         )}
       </main>
+
+      {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
 
       {/* FOOTER */}
       <footer style={{ borderTop: `1px solid ${COLORS.border}`, background: COLORS.navyMid }}>
