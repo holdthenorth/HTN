@@ -260,7 +260,7 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
                 ))}
 
                 {user ? (
-                  <div style={{ position: "relative" }}>
+                  <div style={{ position: "relative", zIndex: 101 }}>
                     <button
                       onClick={() => setShowUserMenu(v => !v)}
                       style={{ display: "flex", alignItems: "center", gap: "0.45rem", background: "none", border: `1px solid ${COLORS.border}`, padding: "0.35rem 0.7rem", cursor: "pointer", fontFamily: "'Barlow Condensed',sans-serif", fontSize: "0.72rem", letterSpacing: "0.1em", color: COLORS.greyLight, transition: "all 0.2s" }}

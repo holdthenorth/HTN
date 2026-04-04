@@ -49,7 +49,7 @@ function timeAgoFull(dateStr) {
 export default function StoryPage() {
   const { storyId } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [article, setArticle] = useState(() => {
     try {
       const c = sessionStorage.getItem("htn-curated-cache");
@@ -100,14 +100,21 @@ export default function StoryPage() {
     if (!commentText.trim()) return;
     setCommentError("");
     setSubmitting(true);
+    const content = commentText.trim();
     const { data, error } = await supabase
       .from("comments")
-      .insert({ user_id: user.id, article_url: articleUrl, content: commentText.trim() })
-      .select("id, content, created_at, user_id, profiles(username)")
+      .insert({ user_id: user.id, article_url: articleUrl, content })
+      .select("id, created_at")
       .single();
     setSubmitting(false);
     if (error) { setCommentError("Failed to post comment. Please try again."); return; }
-    setComments(prev => [data, ...prev]);
+    setComments(prev => [{
+      id: data.id,
+      content,
+      created_at: data.created_at,
+      user_id: user.id,
+      profiles: { username: profile?.username || user.email.split("@")[0] },
+    }, ...prev]);
     setCommentText("");
   }
 
