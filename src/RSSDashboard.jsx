@@ -85,6 +85,11 @@ export default function RSSDashboard() {
   const [search, setSearch] = useState("");
   const [newSourceUrl, setNewSourceUrl] = useState("");
   const [newSourceName, setNewSourceName] = useState("");
+  const [newSourceCategory, setNewSourceCategory] = useState("Custom");
+
+  function detectCategory(url) {
+    return url.includes("youtube.com") ? "YouTube" : "Custom";
+  }
   const [customSources, setCustomSources] = useState(() => {
     try { return JSON.parse(localStorage.getItem("htn-custom-sources") || "[]"); } catch { return []; }
   });
@@ -191,13 +196,19 @@ export default function RSSDashboard() {
   function addSource() {
     if (!newSourceUrl.trim() || !newSourceName.trim()) return;
     const url = newSourceUrl.trim();
-    const isYouTube = url.includes("youtube.com/feeds") || url.includes("youtu.be/feeds");
-    const newSource = { id: `custom-${Date.now()}`, name: newSourceName.trim(), category: isYouTube ? "YouTube" : "Custom", url };
+    const newSource = { id: `custom-${Date.now()}`, name: newSourceName.trim(), category: newSourceCategory, url };
     const updated = [...customSources, newSource];
     setCustomSources(updated);
     localStorage.setItem("htn-custom-sources", JSON.stringify(updated));
     setNewSourceUrl("");
     setNewSourceName("");
+    setNewSourceCategory("Custom");
+  }
+
+  function deleteSource(id) {
+    const updated = customSources.filter(s => s.id !== id);
+    setCustomSources(updated);
+    localStorage.setItem("htn-custom-sources", JSON.stringify(updated));
   }
 
   if (!authed) {
@@ -283,13 +294,45 @@ export default function RSSDashboard() {
           style={{ marginLeft: "auto", background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: "4px", color: COLORS.white, padding: "0.3rem 0.8rem", fontSize: "0.85rem", fontFamily: "'Barlow Condensed', sans-serif", minWidth: "180px" }} />
       </div>
 
-      <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem", flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.5rem", flexWrap: "wrap" }}>
         <input value={newSourceName} onChange={e => setNewSourceName(e.target.value)} placeholder="Source name"
           style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: "4px", color: COLORS.white, padding: "0.3rem 0.8rem", fontSize: "0.85rem", fontFamily: "'Barlow Condensed', sans-serif", width: "160px" }} />
-        <input value={newSourceUrl} onChange={e => setNewSourceUrl(e.target.value)} onKeyDown={e => e.key === "Enter" && addSource()} placeholder="RSS feed URL"
+        <input value={newSourceUrl}
+          onChange={e => { setNewSourceUrl(e.target.value); setNewSourceCategory(detectCategory(e.target.value)); }}
+          onKeyDown={e => e.key === "Enter" && addSource()} placeholder="RSS feed URL"
           style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: "4px", color: COLORS.white, padding: "0.3rem 0.8rem", fontSize: "0.85rem", fontFamily: "'Barlow Condensed', sans-serif", flex: 1, minWidth: "200px" }} />
+        <select value={newSourceCategory} onChange={e => setNewSourceCategory(e.target.value)}
+          style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: "4px", color: COLORS.white, padding: "0.3rem 0.6rem", fontSize: "0.85rem", fontFamily: "'Barlow Condensed', sans-serif" }}>
+          <option value="Mainstream">Mainstream</option>
+          <option value="Independent">Independent</option>
+          <option value="YouTube">YouTube</option>
+          <option value="Custom">Custom</option>
+        </select>
         <button onClick={addSource} style={{ background: COLORS.card, color: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "4px", padding: "0.3rem 1rem", cursor: "pointer", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.8rem", letterSpacing: "0.05em" }}>+ ADD SOURCE</button>
       </div>
+
+      {allSources.length > 0 && (
+        <div style={{ marginBottom: "1.5rem", border: `1px solid ${COLORS.border}`, borderRadius: "6px", overflow: "hidden" }}>
+          <div style={{ background: "#1a1a1a", padding: "0.4rem 0.8rem", fontSize: "0.65rem", letterSpacing: "0.12em", color: COLORS.grey, textTransform: "uppercase" }}>
+            Sources ({allSources.length})
+          </div>
+          {allSources.map(s => {
+            const isCustom = customSources.some(c => c.id === s.id);
+            return (
+              <div key={s.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.4rem 0.8rem", borderTop: `1px solid ${COLORS.border}`, background: COLORS.bg }}>
+                <span style={{ background: COLORS.card, color: COLORS.grey, fontSize: "0.6rem", padding: "0.1rem 0.4rem", borderRadius: "3px", letterSpacing: "0.08em", whiteSpace: "nowrap" }}>{s.category.toUpperCase()}</span>
+                <span style={{ color: COLORS.white, fontSize: "0.8rem", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name}</span>
+                <span style={{ color: "#3a3a3a", fontSize: "0.72rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "240px", display: "none" }}>{s.url}</span>
+                {isCustom ? (
+                  <button onClick={() => deleteSource(s.id)} style={{ background: "transparent", color: COLORS.grey, border: `1px solid ${COLORS.border}`, borderRadius: "3px", padding: "0.2rem 0.5rem", cursor: "pointer", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.7rem", letterSpacing: "0.05em", flexShrink: 0 }}>✕ REMOVE</button>
+                ) : (
+                  <span style={{ color: "#2a2a2a", fontSize: "0.65rem", letterSpacing: "0.08em", flexShrink: 0 }}>BUILT-IN</span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {loading ? (
         <div style={{ color: COLORS.grey, textAlign: "center", padding: "4rem", fontSize: "1.1rem" }}>Loading stories from all sources… 🍁</div>
