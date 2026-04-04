@@ -2,9 +2,10 @@ const JSONBIN_ID = import.meta.env.VITE_JSONBIN_ID;
 const JSONBIN_KEY = import.meta.env.VITE_JSONBIN_KEY;
 
 import { useState, useEffect } from "react";
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Link } from 'react-router-dom';
 import MapleLeafLoader from "./MapleLeafLoader";
 import RSSDashboard from "./RSSDashboard";
+import StoryPage from "./StoryPage";
 const COLORS = {
   red: "#C8102E",
   redDark: "#A00D24",
@@ -287,20 +288,22 @@ export default function HTNNews() {
               ) : (
                 <div className={loaded ? "s2" : ""} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "1rem" }}>
                   {curated.map(article => (
-                    <div key={article.id} className="card" style={{ borderRadius: "6px", overflow: "hidden" }}>
-                      {article.image && <img src={article.image} alt="" onError={e => { e.target.style.display = "none"; }} style={{ width: "100%", height: "200px", objectFit: "cover", display: "block" }} />}
-                      <div style={{ padding: "0.9rem", display: "flex", flexDirection: "column", gap: "0.45rem", flex: 1 }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
-                          <span style={{ background: COLORS.red, color: COLORS.white, fontSize: "0.62rem", padding: "0.18rem 0.5rem", borderRadius: "3px", letterSpacing: "0.08em", whiteSpace: "nowrap", fontWeight: 700, fontFamily: "'Barlow Condensed',sans-serif" }}>{article.source}</span>
-                          <span style={{ color: COLORS.grey, fontSize: "0.72rem", whiteSpace: "nowrap", fontFamily: "'Barlow Condensed',sans-serif" }}>{timeAgo(article.pubDate)}</span>
-                        </div>
-                        <p style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: "1rem", color: COLORS.white, lineHeight: 1.3, margin: 0 }}>{article.title}</p>
-                        {article.description && <p style={{ color: COLORS.grey, fontSize: "0.82rem", margin: 0, lineHeight: 1.55, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden", fontFamily: "'Source Serif 4',serif" }}>{stripHtml(article.description)}</p>}
-                        <div style={{ marginTop: "auto", paddingTop: "0.5rem" }}>
-                          <a href={article.link} target="_blank" rel="noopener noreferrer" className="read-link">{isYT(article.link) ? "▶ Watch Now" : "Read More"} →</a>
+                    <Link key={article.id} to={`/story/${encodeURIComponent(article.id)}`} style={{ textDecoration: "none" }}>
+                      <div className="card" style={{ borderRadius: "6px", overflow: "hidden", height: "100%" }}>
+                        {article.image && <img src={article.image} alt="" onError={e => { e.target.style.display = "none"; }} style={{ width: "100%", height: "200px", objectFit: "cover", display: "block" }} />}
+                        <div style={{ padding: "0.9rem", display: "flex", flexDirection: "column", gap: "0.45rem", flex: 1 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
+                            <span style={{ background: COLORS.red, color: COLORS.white, fontSize: "0.62rem", padding: "0.18rem 0.5rem", borderRadius: "3px", letterSpacing: "0.08em", whiteSpace: "nowrap", fontWeight: 700, fontFamily: "'Barlow Condensed',sans-serif" }}>{article.source}</span>
+                            <span style={{ color: COLORS.grey, fontSize: "0.72rem", whiteSpace: "nowrap", fontFamily: "'Barlow Condensed',sans-serif" }}>{timeAgo(article.pubDate)}</span>
+                          </div>
+                          <p style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: "1rem", color: COLORS.white, lineHeight: 1.3, margin: 0 }}>{article.title}</p>
+                          {article.description && <p style={{ color: COLORS.grey, fontSize: "0.82rem", margin: 0, lineHeight: 1.55, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden", fontFamily: "'Source Serif 4',serif" }}>{stripHtml(article.description)}</p>}
+                          <div style={{ marginTop: "auto", paddingTop: "0.5rem" }}>
+                            <span className="read-link">{isYT(article.link) ? "▶ Watch Now" : "Read More"} →</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               )}
@@ -381,6 +384,7 @@ export function App() {
   return (
     <Routes>
       <Route path="/" element={<HTNNews />} />
+      <Route path="/story/:storyId" element={<StoryPage />} />
       <Route path="/htn-command" element={
         adminAuth ? <RSSDashboard /> : (
           <div style={{ background: "#0D1117", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>

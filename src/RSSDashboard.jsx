@@ -70,6 +70,10 @@ export default function RSSDashboard() {
     try { return JSON.parse(localStorage.getItem("htn-custom-sources") || "[]"); } catch { return []; }
   });
   const [saveStatus, setSaveStatus] = useState(null); // null | "saving" | "ok" | "error"
+  const [notes, setNotes] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("htn-notes") || "{}"); } catch { return {}; }
+  });
+  const [noteModal, setNoteModal] = useState(null); // { article } | null
 
   const allSources = [...SOURCES, ...customSources];
 
@@ -110,10 +114,24 @@ export default function RSSDashboard() {
     setLoading(false);
   }
 
-  function toggleFeatured(id) {
-    const updated = featured.includes(id) ? featured.filter(x => x !== id) : [...featured, id];
+  function removeFeatured(id) {
+    const updated = featured.filter(x => x !== id);
     setFeatured(updated);
     localStorage.setItem("htn-featured", JSON.stringify(updated));
+    const updatedNotes = { ...notes };
+    delete updatedNotes[id];
+    setNotes(updatedNotes);
+    localStorage.setItem("htn-notes", JSON.stringify(updatedNotes));
+  }
+
+  function confirmFeature(article, note) {
+    const updated = [...featured, article.id];
+    setFeatured(updated);
+    localStorage.setItem("htn-featured", JSON.stringify(updated));
+    const updatedNotes = { ...notes, [article.id]: note };
+    setNotes(updatedNotes);
+    localStorage.setItem("htn-notes", JSON.stringify(updatedNotes));
+    setNoteModal(null);
   }
 
   function toggleHero(id) {
@@ -126,7 +144,8 @@ export default function RSSDashboard() {
   async function saveFeatured() {
     const heroArticle = heroId ? articles.find(a => a.id === heroId) : null;
     const featuredArticles = articles.filter(a => featured.includes(a.id) && a.id !== heroId);
-    const ordered = [...(heroArticle ? [heroArticle] : []), ...featuredArticles];
+    const ordered = [...(heroArticle ? [heroArticle] : []), ...featuredArticles]
+      .map(a => ({ ...a, curatorNote: notes[a.id] || "" }));
     if (ordered.length === 0) return;
     setSaveStatus("saving");
     try {
@@ -265,7 +284,7 @@ export default function RSSDashboard() {
                   <a href={article.link} target="_blank" rel="noreferrer" style={{ color: COLORS.white, textDecoration: "none", fontSize: "0.97rem", fontWeight: 600, lineHeight: 1.3 }}>{article.title}</a>
                   {article.description && <p style={{ color: COLORS.grey, fontSize: "0.78rem", margin: 0, lineHeight: 1.5 }}>{article.description}</p>}
                   <div style={{ marginTop: "auto", paddingTop: "0.5rem", display: "flex", gap: "0.4rem" }}>
-                    <button onClick={() => toggleFeatured(article.id)} style={{ flex: 1, background: isFeatured ? COLORS.red : "transparent", color: isFeatured ? COLORS.white : COLORS.grey, border: `1px solid ${isFeatured ? COLORS.red : COLORS.border}`, padding: "0.4rem", borderRadius: "4px", cursor: "pointer", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.78rem", letterSpacing: "0.05em" }}>
+                    <button onClick={() => isFeatured ? removeFeatured(article.id) : setNoteModal({ article, note: notes[article.id] || "" })} style={{ flex: 1, background: isFeatured ? COLORS.red : "transparent", color: isFeatured ? COLORS.white : COLORS.grey, border: `1px solid ${isFeatured ? COLORS.red : COLORS.border}`, padding: "0.4rem", borderRadius: "4px", cursor: "pointer", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.78rem", letterSpacing: "0.05em" }}>
                       {isFeatured ? "★ FEATURED" : "☆ FEATURE THIS"}
                     </button>
                     <button onClick={() => toggleHero(article.id)} title={isHero ? "Remove as hero story" : "Set as hero story"} style={{ background: isHero ? COLORS.orange : "transparent", color: isHero ? COLORS.white : COLORS.grey, border: `1px solid ${isHero ? COLORS.orange : COLORS.border}`, padding: "0.4rem 0.65rem", borderRadius: "4px", cursor: "pointer", fontSize: "0.85rem" }}>📌</button>
@@ -274,6 +293,34 @@ export default function RSSDashboard() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* CURATOR NOTE MODAL */}
+      {noteModal && (
+        <div onClick={() => setNoteModal(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: "1rem" }}>
+          <div onClick={e => e.stopPropagation()} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderTop: `3px solid ${COLORS.red}`, borderRadius: "6px", padding: "1.5rem", width: "100%", maxWidth: "520px", display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <div>
+              <div style={{ color: COLORS.red, fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "0.4rem" }}>Curator Note</div>
+              <div style={{ color: COLORS.white, fontSize: "0.92rem", fontWeight: 600, lineHeight: 1.3, marginBottom: "0.2rem" }}>{noteModal.article.title}</div>
+              <div style={{ color: COLORS.grey, fontSize: "0.72rem" }}>{noteModal.article.source}</div>
+            </div>
+            <textarea
+              autoFocus
+              value={noteModal.note}
+              onChange={e => setNoteModal({ ...noteModal, note: e.target.value })}
+              placeholder="Why does this story matter? Add context for HTN readers…"
+              style={{ background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: "4px", color: COLORS.white, padding: "0.75rem", fontSize: "0.88rem", fontFamily: "'Barlow Condensed', sans-serif", lineHeight: 1.55, resize: "vertical", minHeight: "120px", outline: "none" }}
+            />
+            <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
+              <button onClick={() => setNoteModal(null)} style={{ background: "transparent", color: COLORS.grey, border: `1px solid ${COLORS.border}`, borderRadius: "4px", padding: "0.45rem 1rem", cursor: "pointer", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.8rem", letterSpacing: "0.06em" }}>
+                CANCEL
+              </button>
+              <button onClick={() => confirmFeature(noteModal.article, noteModal.note)} style={{ background: COLORS.red, color: COLORS.white, border: "none", borderRadius: "4px", padding: "0.45rem 1.2rem", cursor: "pointer", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.08em" }}>
+                ★ FEATURE THIS STORY
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
