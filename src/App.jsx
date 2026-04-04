@@ -21,10 +21,13 @@ const COLORS = {
 };
 
 const CATEGORIES = [
-  { id: "all", label: "All Stories", short: "All" },
-  { id: "canadian-politics", label: "Canadian Politics", short: "Politics", color: "#C8102E" },
-  { id: "geopolitical-watch", label: "Geopolitical Watch", short: "Geopolitical", color: "#1A6FC4" },
-  { id: "curated-voices", label: "Curated Voices", short: "Voices", color: "#2A9C6F" },
+  { id: "all",          label: "All",         color: COLORS.red },
+  { id: "politics",     label: "Politics",     color: "#C8102E" },
+  { id: "world",        label: "World",        color: "#1A6FC4" },
+  { id: "voices",       label: "Voices",       color: "#2A9C6F" },
+  { id: "street-level", label: "Street Level", color: "#C47A1A" },
+  { id: "trump-watch",  label: "Trump Watch",  color: "#8B2FC9" },
+  { id: "the-pitch",    label: "The Pitch",    color: "#1A8FA0" },
 ];
 
 const TICKER_ITEMS = [
@@ -102,7 +105,8 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
   const [pwError, setPwError] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState(null);
-  const [form, setForm] = useState({ title: "", category: "canadian-politics", url: "", date: "", source: "", note: "", imageUrl: "", featured: false });
+  const [form, setForm] = useState({ title: "", category: "politics", url: "", date: "", source: "", note: "", imageUrl: "", featured: false });
+  const [activeCategory, setActiveCategory] = useState("all");
   const [toast, setToast] = useState("");
   const [tickerPos, setTickerPos] = useState(0);
   const [loaded, setLoaded] = useState(false);
@@ -252,8 +256,13 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
               </nav>
             </div>
             {activePage === "news" && (
-              <div className={loaded ? "s2" : ""} style={{ marginTop: "0.9rem", display: "flex", gap: "0.35rem", flexWrap: "wrap", alignItems: "center" }}>
-                <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: "0.68rem", color: COLORS.grey }}>{curated.length} {curated.length === 1 ? "story" : "stories"}</span>
+              <div className={loaded ? "s2" : ""} style={{ marginTop: "0.9rem", display: "flex", gap: "0.3rem", flexWrap: "wrap", alignItems: "center" }}>
+                {CATEGORIES.map(c => (
+                  <button key={c.id} className={`cat-pill ${activeCategory === c.id ? "active" : ""}`} onClick={() => setActiveCategory(c.id)}
+                    style={{ borderColor: activeCategory === c.id ? c.color : undefined, background: activeCategory === c.id ? c.color : undefined }}>
+                    {c.label}
+                  </button>
+                ))}
               </div>
             )}
           </div>
@@ -287,34 +296,36 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
           )}
 
           {/* NEWS PAGE */}
-          {activePage === "news" && (
-            <>
-              {curated.length === 0 ? (
-                <div style={{ padding: "5rem", textAlign: "center", color: COLORS.grey, fontFamily: "'Barlow Condensed',sans-serif", fontSize: "1rem", letterSpacing: "0.08em" }}>No stories yet — check back soon.</div>
-              ) : (
-                <div className={loaded ? "s2" : ""} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "1rem" }}>
-                  {curated.map(article => (
-                    <Link key={article.id} to={`/story/${encodeURIComponent(article.id)}`} style={{ textDecoration: "none" }}>
-                      <div className="card" style={{ borderRadius: "6px", overflow: "hidden", height: "100%" }}>
-                        {article.image && <img src={article.image} alt="" onError={e => { e.target.style.display = "none"; }} style={{ width: "100%", height: "200px", objectFit: "cover", display: "block" }} />}
-                        <div style={{ padding: "0.9rem", display: "flex", flexDirection: "column", gap: "0.45rem", flex: 1 }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
-                            <span style={{ background: COLORS.red, color: COLORS.white, fontSize: "0.62rem", padding: "0.18rem 0.5rem", borderRadius: "3px", letterSpacing: "0.08em", whiteSpace: "nowrap", fontWeight: 700, fontFamily: "'Barlow Condensed',sans-serif" }}>{article.source}</span>
-                            <span style={{ color: COLORS.grey, fontSize: "0.72rem", whiteSpace: "nowrap", fontFamily: "'Barlow Condensed',sans-serif" }}>{timeAgo(article.pubDate)}</span>
-                          </div>
-                          <p style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: "1rem", color: COLORS.white, lineHeight: 1.3, margin: 0 }}>{article.title}</p>
-                          {article.description && <p style={{ color: COLORS.grey, fontSize: "0.82rem", margin: 0, lineHeight: 1.55, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden", fontFamily: "'Source Serif 4',serif" }}>{stripHtml(article.description)}</p>}
-                          <div style={{ marginTop: "auto", paddingTop: "0.5rem" }}>
-                            <span className="read-link">{isYT(article.link) ? "▶ Watch Now" : "Read More"} →</span>
-                          </div>
+          {activePage === "news" && (() => {
+            const visibleArticles = activeCategory === "all" ? curated : curated.filter(a => a.category === activeCategory);
+            const catColor = CATEGORIES.find(c => c.id === activeCategory)?.color || COLORS.red;
+            return visibleArticles.length === 0 ? (
+              <div style={{ padding: "5rem", textAlign: "center", color: COLORS.grey, fontFamily: "'Barlow Condensed',sans-serif", fontSize: "1rem", letterSpacing: "0.08em" }}>
+                {curated.length === 0 ? "No stories yet — check back soon." : "No stories in this category yet."}
+              </div>
+            ) : (
+              <div className={loaded ? "s2" : ""} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "1rem" }}>
+                {visibleArticles.map(article => (
+                  <Link key={article.id} to={`/story/${encodeURIComponent(article.id)}`} style={{ textDecoration: "none" }}>
+                    <div className="card" style={{ borderRadius: "6px", overflow: "hidden", height: "100%", borderTopColor: catColor }}>
+                      {article.image && <img src={article.image} alt="" onError={e => { e.target.style.display = "none"; }} style={{ width: "100%", height: "200px", objectFit: "cover", display: "block" }} />}
+                      <div style={{ padding: "0.9rem", display: "flex", flexDirection: "column", gap: "0.45rem", flex: 1 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
+                          <span style={{ background: COLORS.red, color: COLORS.white, fontSize: "0.62rem", padding: "0.18rem 0.5rem", borderRadius: "3px", letterSpacing: "0.08em", whiteSpace: "nowrap", fontWeight: 700, fontFamily: "'Barlow Condensed',sans-serif" }}>{article.source}</span>
+                          <span style={{ color: COLORS.grey, fontSize: "0.72rem", whiteSpace: "nowrap", fontFamily: "'Barlow Condensed',sans-serif" }}>{timeAgo(article.pubDate)}</span>
+                        </div>
+                        <p style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: "1rem", color: COLORS.white, lineHeight: 1.3, margin: 0 }}>{article.title}</p>
+                        {article.description && <p style={{ color: COLORS.grey, fontSize: "0.82rem", margin: 0, lineHeight: 1.55, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden", fontFamily: "'Source Serif 4',serif" }}>{stripHtml(article.description)}</p>}
+                        <div style={{ marginTop: "auto", paddingTop: "0.5rem" }}>
+                          <span className="read-link">{isYT(article.link) ? "▶ Watch Now" : "Read More"} →</span>
                         </div>
                       </div>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </>
-          )}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            );
+          })()}
 
           {/* ABOUT */}
           {activePage === "about" && (
