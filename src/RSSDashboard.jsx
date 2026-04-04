@@ -12,6 +12,16 @@ const COLORS = {
 };
 
 const RSS2JSON = `https://api.rss2json.com/v1/api.json?api_key=${import.meta.env.VITE_RSS2JSON_API_KEY}&rss_url=`;
+
+function getYTId(url) {
+  if (!url) return null;
+  try {
+    const u = new URL(url);
+    if (u.hostname.includes("youtube.com")) return u.searchParams.get("v");
+    if (u.hostname === "youtu.be") return u.pathname.slice(1);
+  } catch {}
+  return null;
+}
 const JSONBIN_ID = import.meta.env.VITE_JSONBIN_ID;
 const JSONBIN_KEY = import.meta.env.VITE_JSONBIN_KEY;
 
@@ -37,6 +47,9 @@ const SOURCES = [
   { id: "ling",     name: "Justin Ling",      category: "Independent", url: "https://justinling.substack.com/feed" },
   { id: "glavin",   name: "Terry Glavin",     category: "Independent", url: "https://therealstory.substack.com/feed" },
   { id: "rabble",   name: "Rabble.ca",        category: "Independent", url: "https://rabble.ca/feed" },
+  { id: "yt-angus", name: "Charlie Angus (YT)", category: "YouTube", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCKsAjgqGGJkfTBOFoqGLxOA" },
+  { id: "yt-canadaland", name: "Canadaland (YT)", category: "YouTube", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCgDpf1Lk4YCCSmWFGBbGRXg" },
+  { id: "yt-thetyee", name: "The Tyee (YT)", category: "YouTube", url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCbRDVc6PqR8Q9FJTpJJUcHQ" },
 ];
 
 function parseDate(dateStr) {
@@ -97,7 +110,8 @@ export default function RSSDashboard() {
         const data = await res.json();
         if (!data.items) return;
         data.items.forEach(item => {
-          const image = item.thumbnail || null;
+          const ytId = getYTId(item.link);
+          const image = item.thumbnail || (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : null);
           results.push({
             id: item.link,
             title: item.title,
@@ -105,6 +119,7 @@ export default function RSSDashboard() {
             pubDate: item.pubDate,
             description: item.description?.replace(/<[^>]*>/g, "").trim().slice(0, 150) || "",
             image,
+            ytId: ytId || null,
             source: source.name,
             category: source.category,
           });

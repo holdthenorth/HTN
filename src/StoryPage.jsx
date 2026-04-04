@@ -93,12 +93,22 @@ export default function StoryPage() {
           </div>
         ) : (
           <>
-            {/* IMAGE */}
-            {article.image && (
+            {/* YOUTUBE PLAYER or IMAGE */}
+            {article.ytId ? (
+              <div style={{ marginBottom: "2rem", borderRadius: "4px", overflow: "hidden", position: "relative", paddingTop: "56.25%" }}>
+                <iframe
+                  src={`https://www.youtube.com/embed/${article.ytId}`}
+                  title={article.title}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: "none" }}
+                />
+              </div>
+            ) : article.image ? (
               <div style={{ marginBottom: "2rem", borderRadius: "4px", overflow: "hidden" }}>
                 <img src={article.image} alt="" onError={e => { e.target.style.display = "none"; }} style={{ width: "100%", maxHeight: "480px", objectFit: "cover", display: "block" }} />
               </div>
-            )}
+            ) : null}
 
             {/* SOURCE + META */}
             <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.2rem", flexWrap: "wrap" }}>
@@ -117,11 +127,19 @@ export default function StoryPage() {
               </p>
             )}
 
-            {/* READ ORIGINAL */}
+            {/* WATCH / READ LINK */}
             <div style={{ marginBottom: "3rem" }}>
-              <a href={article.link} target="_blank" rel="noopener noreferrer" className="read-orig">
-                {isYT(article.link) ? "▶ Watch on YouTube" : "Read Original Article"} →
-              </a>
+              {article.ytId ? (
+                <a href={article.link} target="_blank" rel="noopener noreferrer" style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, fontSize: "0.78rem", letterSpacing: "0.12em", textTransform: "uppercase", color: COLORS.grey, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "0.4rem", transition: "color 0.2s" }}
+                  onMouseEnter={e => e.currentTarget.style.color = COLORS.white}
+                  onMouseLeave={e => e.currentTarget.style.color = COLORS.grey}>
+                  ↗ Watch on YouTube
+                </a>
+              ) : (
+                <a href={article.link} target="_blank" rel="noopener noreferrer" className="read-orig">
+                  Read Original Article →
+                </a>
+              )}
             </div>
 
             {/* DIVIDER */}
