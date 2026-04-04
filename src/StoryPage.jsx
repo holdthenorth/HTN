@@ -86,7 +86,7 @@ export default function StoryPage() {
     if (!articleUrl) return;
     setCommentsLoading(true);
     supabase
-      .from("comments")
+      .from("Comments")
       .select("id, content, created_at, user_id, profiles(username)")
       .eq("article_url", articleUrl)
       .order("created_at", { ascending: false })
@@ -102,7 +102,7 @@ export default function StoryPage() {
     setSubmitting(true);
     const content = commentText.trim();
     const { data, error } = await supabase
-      .from("comments")
+      .from("Comments")
       .insert({ user_id: user.id, article_url: articleUrl, content })
       .select("id, created_at")
       .single();
