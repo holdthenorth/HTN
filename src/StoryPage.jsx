@@ -34,18 +34,25 @@ function stripHtml(str) {
 export default function StoryPage() {
   const { storyId } = useParams();
   const navigate = useNavigate();
-  const [article, setArticle] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [article, setArticle] = useState(() => {
+    try {
+      const c = sessionStorage.getItem("htn-curated-cache");
+      if (!c) return null;
+      return JSON.parse(c).find(a => a.id === decodeURIComponent(storyId)) || null;
+    } catch { return null; }
+  });
+  const [loading, setLoading] = useState(() => !sessionStorage.getItem("htn-curated-cache"));
 
   useEffect(() => {
+    if (sessionStorage.getItem("htn-curated-cache")) return;
     fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_ID}/latest`, {
       headers: { "X-Master-Key": JSONBIN_KEY },
     })
       .then(r => r.json())
       .then(data => {
         const articles = data.record?.articles || [];
-        const found = articles.find(a => a.id === decodeURIComponent(storyId));
-        setArticle(found || null);
+        sessionStorage.setItem("htn-curated-cache", JSON.stringify(articles));
+        setArticle(articles.find(a => a.id === decodeURIComponent(storyId)) || null);
         setLoading(false);
       })
       .catch(() => setLoading(false));

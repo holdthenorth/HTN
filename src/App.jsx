@@ -94,7 +94,7 @@ function timeAgo(dateStr) {
 function isYT(url) { return url && (url.includes("youtube.com") || url.includes("youtu.be")); }
 function stripHtml(str) { return str ? str.replace(/<[^>]*>/g, "") : ""; }
 
-export default function HTNNews() {
+export default function HTNNews({ showLoader, onLoaderComplete }) {
   const [items, setItems] = useState([]);
   const [adminMode, setAdminMode] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
@@ -104,18 +104,24 @@ export default function HTNNews() {
   const [editId, setEditId] = useState(null);
   const [form, setForm] = useState({ title: "", category: "canadian-politics", url: "", date: "", source: "", note: "", imageUrl: "", featured: false });
   const [toast, setToast] = useState("");
-  const [showLoader, setShowLoader] = useState(true);
   const [tickerPos, setTickerPos] = useState(0);
   const [loaded, setLoaded] = useState(false);
   const [activePage, setActivePage] = useState("news");
-  const [curated, setCurated] = useState([]);
+  const [curated, setCurated] = useState(() => {
+    try { const c = sessionStorage.getItem("htn-curated-cache"); return c ? JSON.parse(c) : []; } catch { return []; }
+  });
 
   useEffect(() => {
+    if (sessionStorage.getItem("htn-curated-cache")) return;
     fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_ID}/latest`, {
       headers: { "X-Master-Key": JSONBIN_KEY }
     })
     .then(r => r.json())
-    .then(data => setCurated(data.record?.articles || []))
+    .then(data => {
+      const articles = data.record?.articles || [];
+      sessionStorage.setItem("htn-curated-cache", JSON.stringify(articles));
+      setCurated(articles);
+    })
     .catch(() => setCurated([]));
   }, []);
 
@@ -158,7 +164,7 @@ export default function HTNNews() {
 
   return (
     <>
-      {showLoader && <MapleLeafLoader onComplete={() => setShowLoader(false)} />}
+      {showLoader && <MapleLeafLoader onComplete={onLoaderComplete} />}
       <div style={{ minHeight: "100vh", background: COLORS.navy, color: COLORS.offWhite, fontFamily: "Georgia, serif" }}>
         <style>{`
           @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;1,8..60,400&family=Barlow+Condensed:wght@400;600;700&display=swap');
@@ -380,10 +386,11 @@ export default function HTNNews() {
 export function App() {
   const [adminAuth, setAdminAuth] = useState(false);
   const [adminPw, setAdminPw] = useState("");
+  const [showLoader, setShowLoader] = useState(true);
 
   return (
     <Routes>
-      <Route path="/" element={<HTNNews />} />
+      <Route path="/" element={<HTNNews showLoader={showLoader} onLoaderComplete={() => setShowLoader(false)} />} />
       <Route path="/story/:storyId" element={<StoryPage />} />
       <Route path="/htn-command" element={
         adminAuth ? <RSSDashboard /> : (
