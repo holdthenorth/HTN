@@ -6,6 +6,8 @@ import { Routes, Route, Link } from 'react-router-dom';
 import MapleLeafLoader from "./MapleLeafLoader";
 import RSSDashboard from "./RSSDashboard";
 import StoryPage from "./StoryPage";
+import { AuthProvider, useAuth } from "./AuthContext";
+import AuthModal from "./AuthModal";
 const COLORS = {
   red: "#C8102E",
   redDark: "#A00D24",
@@ -98,6 +100,9 @@ function isYT(url) { return url && (url.includes("youtube.com") || url.includes(
 function stripHtml(str) { return str ? str.replace(/<[^>]*>/g, "") : ""; }
 
 export default function HTNNews({ showLoader, onLoaderComplete }) {
+  const { user, profile, signOut } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
   const [items, setItems] = useState([]);
   const [adminMode, setAdminMode] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
@@ -253,6 +258,43 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
                 {[{ id: "news", label: "News" }, { id: "about", label: "About" }, { id: "submit", label: "Submit Your Work" }].map(p => (
                   <button key={p.id} className={`nav-btn ${activePage === p.id ? "active" : ""}`} onClick={() => setActivePage(p.id)}>{p.label}</button>
                 ))}
+
+                {user ? (
+                  <div style={{ position: "relative" }}>
+                    <button
+                      onClick={() => setShowUserMenu(v => !v)}
+                      style={{ display: "flex", alignItems: "center", gap: "0.45rem", background: "none", border: `1px solid ${COLORS.border}`, padding: "0.35rem 0.7rem", cursor: "pointer", fontFamily: "'Barlow Condensed',sans-serif", fontSize: "0.72rem", letterSpacing: "0.1em", color: COLORS.greyLight, transition: "all 0.2s" }}
+                      onMouseEnter={e => e.currentTarget.style.borderColor = COLORS.grey}
+                      onMouseLeave={e => e.currentTarget.style.borderColor = COLORS.border}
+                    >
+                      <span style={{ width: 22, height: 22, borderRadius: "50%", background: COLORS.red, display: "inline-flex", alignItems: "center", justifyContent: "center", color: COLORS.white, fontSize: "0.7rem", fontWeight: 700, flexShrink: 0 }}>
+                        {(profile?.username || user.email)?.[0]?.toUpperCase() || "?"}
+                      </span>
+                      {profile?.username || user.email.split("@")[0]}
+                    </button>
+                    {showUserMenu && (
+                      <div style={{ position: "absolute", right: 0, top: "calc(100% + 0.4rem)", background: COLORS.navyLight, border: `1px solid ${COLORS.border}`, minWidth: 140, zIndex: 100 }}>
+                        <button
+                          onClick={() => { signOut(); setShowUserMenu(false); }}
+                          style={{ display: "block", width: "100%", background: "none", border: "none", borderBottom: `1px solid ${COLORS.border}`, color: COLORS.grey, padding: "0.65rem 1rem", fontFamily: "'Barlow Condensed',sans-serif", fontSize: "0.72rem", letterSpacing: "0.1em", textTransform: "uppercase", cursor: "pointer", textAlign: "left", transition: "color 0.2s" }}
+                          onMouseEnter={e => e.target.style.color = COLORS.offWhite}
+                          onMouseLeave={e => e.target.style.color = COLORS.grey}
+                        >
+                          Sign Out
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <button
+                    className="nav-btn"
+                    onClick={() => setShowAuthModal(true)}
+                    style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                    Sign In
+                  </button>
+                )}
               </nav>
             </div>
             {activePage === "news" && (
@@ -388,6 +430,8 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
           </div>
         )}
 
+        {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
+        {showUserMenu && <div onClick={() => setShowUserMenu(false)} style={{ position: "fixed", inset: 0, zIndex: 99 }} />}
         {toast && <div className="toast">{toast}</div>}
       </div>
     </>
@@ -400,6 +444,7 @@ export function App() {
   const [showLoader, setShowLoader] = useState(true);
 
   return (
+    <AuthProvider>
     <Routes>
       <Route path="/" element={<HTNNews showLoader={showLoader} onLoaderComplete={() => setShowLoader(false)} />} />
       <Route path="/story/:storyId" element={<StoryPage />} />
@@ -421,5 +466,6 @@ export function App() {
         )
       } />
     </Routes>
+    </AuthProvider>
   );
 }
