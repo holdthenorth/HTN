@@ -107,15 +107,16 @@ export default function RSSDashboard() {
         const data = await res.json();
         if (!data.items) return;
         data.items.forEach(item => {
-          if (!item || !item.link) return;
-          const ytId = getYTId(item.link);
+          if (!item) return;
+          const link = item.link || item.guid || item.id || "";
+          const ytId = getYTId(link);
           const image = (typeof item.thumbnail === "string" && item.thumbnail) || (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : null);
           const rawDesc = typeof item.description === "string" ? item.description : "";
           const description = rawDesc.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim().slice(0, 160) || "";
           results.push({
-            id: item.link,
+            id: link || `${source.id}-${Date.now()}-${Math.random()}`,
             title: item.title || "",
-            link: item.link,
+            link,
             pubDate: item.pubDate || "",
             description,
             image,
@@ -189,7 +190,9 @@ export default function RSSDashboard() {
 
   function addSource() {
     if (!newSourceUrl.trim() || !newSourceName.trim()) return;
-    const newSource = { id: `custom-${Date.now()}`, name: newSourceName.trim(), category: "Custom", url: newSourceUrl.trim() };
+    const url = newSourceUrl.trim();
+    const isYouTube = url.includes("youtube.com/feeds") || url.includes("youtu.be/feeds");
+    const newSource = { id: `custom-${Date.now()}`, name: newSourceName.trim(), category: isYouTube ? "YouTube" : "Custom", url };
     const updated = [...customSources, newSource];
     setCustomSources(updated);
     localStorage.setItem("htn-custom-sources", JSON.stringify(updated));
