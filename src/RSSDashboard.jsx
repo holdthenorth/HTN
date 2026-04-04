@@ -108,6 +108,25 @@ export default function RSSDashboard() {
     const results = [];
     await Promise.all(allSources.map(async (source) => {
       try {
+        const sourceYtId = getYTId(source.url);
+        if (sourceYtId) {
+          // Single YouTube video URL — fetch via oEmbed (no API key needed)
+          const res = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(source.url)}&format=json`);
+          if (!res.ok) return;
+          const data = await res.json();
+          results.push({
+            id: source.url,
+            title: data.title || source.name,
+            link: source.url,
+            pubDate: "",
+            description: data.author_name ? `YouTube · ${data.author_name}` : "YouTube",
+            image: data.thumbnail_url || `https://img.youtube.com/vi/${sourceYtId}/hqdefault.jpg`,
+            ytId: sourceYtId,
+            source: source.name,
+            category: source.category,
+          });
+          return;
+        }
         const res = await fetch(`${RSS2JSON}${encodeURIComponent(source.url)}&count=8`);
         const data = await res.json();
         if (!data.items) return;
@@ -320,7 +339,7 @@ export default function RSSDashboard() {
             const isCustom = customSources.some(c => c.id === s.id);
             return (
               <div key={s.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.4rem 0.8rem", borderTop: `1px solid ${COLORS.border}`, background: COLORS.bg }}>
-                <span style={{ background: COLORS.card, color: COLORS.grey, fontSize: "0.6rem", padding: "0.1rem 0.4rem", borderRadius: "3px", letterSpacing: "0.08em", whiteSpace: "nowrap" }}>{s.category.toUpperCase()}</span>
+                <span style={{ background: COLORS.card, color: COLORS.grey, fontSize: "0.6rem", padding: "0.1rem 0.4rem", borderRadius: "3px", letterSpacing: "0.08em", whiteSpace: "nowrap" }}>{getYTId(s.url) ? "▶ VIDEO" : s.category.toUpperCase()}</span>
                 <span style={{ color: COLORS.white, fontSize: "0.8rem", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name}</span>
                 <span style={{ color: "#3a3a3a", fontSize: "0.72rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "240px", display: "none" }}>{s.url}</span>
                 {isCustom ? (
