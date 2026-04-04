@@ -34,14 +34,6 @@ const TICKER_ITEMS = [
   "Add HTN to your home screen for instant updates",
 ];
 
-const SEED_ITEMS = [
-  { id: "s1", title: "Mark Carney Takes the Helm: What the Liberal Leadership Means for Canada's Future", category: "canadian-politics", url: "https://www.cbc.ca", date: "2025-03-20", source: "CBC News", note: "A pivotal shift heading into election season.", featured: true },
-  { id: "s2", title: "Iran Nuclear Talks Collapse — Regional Fallout and What It Means for Canada", category: "geopolitical-watch", url: "https://www.reuters.com", date: "2025-03-19", source: "Reuters", note: "Watching the alignment of nations closely.", featured: false },
-  { id: "s3", title: "Canada's Unhappiness Crisis: Charlie Angus on Young Canadians Left Behind", category: "curated-voices", url: "https://www.youtube.com", date: "2025-03-22", source: "YouTube", note: "A rare voice of moral clarity in Canadian politics.", featured: false, isVideo: true },
-  { id: "s4", title: "Sovereignty Under Pressure: How Canada Must Respond to US Economic Aggression", category: "canadian-politics", url: "https://www.theglobeandmail.com", date: "2025-03-21", source: "Globe & Mail", note: "", featured: false },
-  { id: "s5", title: "The Arctic Question: Russia, NATO and Canada's Northern Blind Spot", category: "geopolitical-watch", url: "https://www.cbc.ca", date: "2025-03-18", source: "CBC", note: "Canada's north is becoming the world's next flashpoint.", featured: false },
-  { id: "s6", title: "Jason Stanley: The Anatomy of Fascism and Why Canada Is Not Immune", category: "curated-voices", url: "https://www.youtube.com", date: "2025-03-17", source: "YouTube", note: "", featured: false, isVideo: true },
-];
 
 const ADMIN_PW = "holdthenorth";
 
@@ -97,18 +89,12 @@ function timeAgo(dateStr) {
   return d.toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" });
 }
 
-function getDomain(url) {
-  try { return new URL(url).hostname.replace("www.", ""); } catch { return ""; }
-}
 
 function isYT(url) { return url && (url.includes("youtube.com") || url.includes("youtu.be")); }
-function getCatColor(id) { return CATEGORIES.find(c => c.id === id)?.color || COLORS.red; }
-function getCatLabel(id) { return CATEGORIES.find(c => c.id === id)?.label || id; }
 function stripHtml(str) { return str ? str.replace(/<[^>]*>/g, "") : ""; }
 
 export default function HTNNews() {
   const [items, setItems] = useState([]);
-  const [activeCategory, setActiveCategory] = useState("all");
   const [adminMode, setAdminMode] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [pwInput, setPwInput] = useState("");
@@ -138,21 +124,13 @@ export default function HTNNews() {
   async function loadItems() {
     try {
       const r = await window.storage.get("htn-v4-items", true);
-      setItems(r ? JSON.parse(r.value) : SEED_ITEMS);
-      if (!r) await window.storage.set("htn-v4-items", JSON.stringify(SEED_ITEMS), true);
-    } catch { setItems(SEED_ITEMS); }
+      setItems(r ? JSON.parse(r.value) : []);
+    } catch { setItems([]); }
   }
 
   async function persist(updated) {
     setItems(updated);
     try { await window.storage.set("htn-v4-items", JSON.stringify(updated), true); } catch {}
-    try {
-      await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_ID}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", "X-Master-Key": JSONBIN_KEY },
-        body: JSON.stringify({ articles: updated })
-      });
-    } catch {}
   }
 
   function showToast(msg) { setToast(msg); setTimeout(() => setToast(""), 2500); }
@@ -176,20 +154,6 @@ export default function HTNNews() {
     resetForm();
     showToast(editId ? "Story updated." : "Story published.");
   }
-
-  async function handleDelete(id) { await persist(items.filter(i => i.id !== id)); showToast("Story removed."); }
-
-  function handleEdit(item) {
-    setForm({ title: item.title, category: item.category, url: item.url, date: item.date, source: item.source || "", note: item.note || "", featured: item.featured || false });
-    setEditId(item.id); setShowForm(true); setActivePage("news");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-
-  const filtered = (activeCategory === "all" ? items : items.filter(i => i.category === activeCategory))
-    .sort((a, b) => new Date(b.date) - new Date(a.date));
-
-  const featured = filtered[0];
-  const rest = filtered.slice(1);
 
   return (
     <>
@@ -271,7 +235,7 @@ export default function HTNNews() {
         <header style={{ background: COLORS.navy, borderBottom: `3px solid ${COLORS.red}` }}>
           <div style={{ maxWidth: 1200, margin: "0 auto", padding: "1rem 1.2rem" }}>
             <div className={loaded ? "s1" : ""} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem" }}>
-              <div style={{ cursor: "pointer" }} onClick={() => { setActivePage("news"); setActiveCategory("all"); }}>
+              <div style={{ cursor: "pointer" }} onClick={() => setActivePage("news")}>
                 <img src="/htncrop.png" alt="HTN News Canada" style={{ height: "58px" }} />
               </div>
               <nav style={{ display: "flex", gap: "1.6rem", alignItems: "center" }}>
@@ -282,10 +246,7 @@ export default function HTNNews() {
             </div>
             {activePage === "news" && (
               <div className={loaded ? "s2" : ""} style={{ marginTop: "0.9rem", display: "flex", gap: "0.35rem", flexWrap: "wrap", alignItems: "center" }}>
-                {CATEGORIES.map(c => (
-                  <button key={c.id} className={`cat-pill ${activeCategory === c.id ? "active" : ""}`} onClick={() => setActiveCategory(c.id)}>{c.short}</button>
-                ))}
-                <span style={{ marginLeft: "auto", fontFamily: "'Barlow Condensed',sans-serif", fontSize: "0.68rem", color: COLORS.grey }}>{filtered.length} {filtered.length === 1 ? "story" : "stories"}</span>
+                <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: "0.68rem", color: COLORS.grey }}>{curated.length} {curated.length === 1 ? "story" : "stories"}</span>
               </div>
             )}
           </div>
@@ -321,107 +282,27 @@ export default function HTNNews() {
           {/* NEWS PAGE */}
           {activePage === "news" && (
             <>
-              {filtered.length === 0 ? (
-                <div style={{ padding: "5rem", textAlign: "center", color: COLORS.grey, fontFamily: "'Playfair Display',serif", fontStyle: "italic", fontSize: "1.2rem" }}>No stories in this category yet.</div>
+              {curated.length === 0 ? (
+                <div style={{ padding: "5rem", textAlign: "center", color: COLORS.grey, fontFamily: "'Barlow Condensed',sans-serif", fontSize: "1rem", letterSpacing: "0.08em" }}>No stories yet — check back soon.</div>
               ) : (
-                <>
-                  {featured && (
-                    <div className={loaded ? "s2" : ""} style={{ marginBottom: "1.8rem" }}>
-
-                      {/* HTN CURATED SECTION */}
-                      {curated.length > 0 && (
-                        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "1.5rem 0 0" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "1rem" }}>
-                            <span style={{ width: 8, height: 8, background: COLORS.red, borderRadius: "50%", display: "inline-block" }}></span>
-                            <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: "0.75rem", fontWeight: 700, letterSpacing: "0.15em", color: COLORS.white, textTransform: "uppercase" }}>HTN Curated</span>
-                          </div>
-
-                          {/* AP NEWS STYLE LIST */}
-                          <div style={{ marginBottom: "2rem" }}>
-                            {curated.map(a => (
-                              <a key={a.id} href={a.link} target="_blank" rel="noreferrer" className="news-row">
-                                {a.image && (
-                                  <img
-                                    src={a.image}
-                                    alt=""
-                                    onError={e => { e.target.style.display = "none"; }}
-                                    style={{ width: 140, height: 95, objectFit: "cover", flexShrink: 0, borderRadius: "3px" }}
-                                  />
-                                )}
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.35rem", flexWrap: "wrap" }}>
-                                    <span style={{ background: COLORS.red, color: COLORS.white, fontSize: "0.6rem", padding: "0.15rem 0.4rem", letterSpacing: "0.08em", fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, textTransform: "uppercase" }}>{a.source}</span>
-                                    <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: "0.65rem", color: COLORS.grey }}>{timeAgo(a.pubDate)}</span>
-                                  </div>
-                                  <p style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: "1rem", color: COLORS.white, lineHeight: 1.3, marginBottom: "0.35rem" }}>{a.title}</p>
-                                  {a.description && (
-                                    <p style={{ fontFamily: "'Source Serif 4',serif", fontSize: "0.82rem", color: COLORS.grey, lineHeight: 1.55, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-                                      {stripHtml(a.description)}
-                                    </p>
-                                  )}
-                                </div>
-                              </a>
-                            ))}
-                          </div>
+                <div className={loaded ? "s2" : ""} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "1rem" }}>
+                  {curated.map(article => (
+                    <div key={article.id} className="card" style={{ borderRadius: "6px", overflow: "hidden" }}>
+                      {article.image && <img src={article.image} alt="" onError={e => { e.target.style.display = "none"; }} style={{ width: "100%", height: "200px", objectFit: "cover", display: "block" }} />}
+                      <div style={{ padding: "0.9rem", display: "flex", flexDirection: "column", gap: "0.45rem", flex: 1 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
+                          <span style={{ background: COLORS.red, color: COLORS.white, fontSize: "0.62rem", padding: "0.18rem 0.5rem", borderRadius: "3px", letterSpacing: "0.08em", whiteSpace: "nowrap", fontWeight: 700, fontFamily: "'Barlow Condensed',sans-serif" }}>{article.source}</span>
+                          <span style={{ color: COLORS.grey, fontSize: "0.72rem", whiteSpace: "nowrap", fontFamily: "'Barlow Condensed',sans-serif" }}>{timeAgo(article.pubDate)}</span>
                         </div>
-                      )}
-
-                      <div className="sec-label" style={{ marginBottom: "0.9rem" }}><span className="live-dot" />Featured Story</div>
-                      <div style={{ background: COLORS.navyLight, border: `1px solid ${COLORS.border}`, borderTop: `3px solid ${getCatColor(featured.category)}`, overflow: "hidden" }}>
-                        {featured.imageUrl && <img src={featured.imageUrl} alt="" onError={e => { e.target.style.display = "none"; }} style={{ width: "100%", maxHeight: "360px", objectFit: "cover", display: "block" }} />}
-                        <div style={{ padding: "1.8rem" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "0.7rem", marginBottom: "0.9rem", flexWrap: "wrap" }}>
-                            <span className="cat-tag" style={{ background: `${getCatColor(featured.category)}20`, color: getCatColor(featured.category) }}>{getCatLabel(featured.category)}</span>
-                            {isYT(featured.url) && <span className="cat-tag" style={{ background: "#FF000018", color: "#FF5555" }}>▶ Video</span>}
-                            <span className="meta">{timeAgo(featured.date)}{featured.source ? ` · ${featured.source}` : ""}</span>
-                          </div>
-                          <h2 style={{ fontFamily: "'Playfair Display',serif", fontWeight: 900, fontSize: "clamp(1.45rem,3vw,2.3rem)", color: COLORS.white, lineHeight: 1.15, marginBottom: "1rem" }}>{featured.title}</h2>
-                          {featured.note && <p className="note-text" style={{ marginBottom: "1.1rem" }}>{featured.note}</p>}
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "0.8rem" }}>
-                            <a href={featured.url} target="_blank" rel="noopener noreferrer" className="read-link">{isYT(featured.url) ? "▶ Watch Now" : "Read Full Story"} →</a>
-                            <span className="meta">{getDomain(featured.url)}</span>
-                          </div>
-                          {adminMode && (
-                            <div style={{ display: "flex", gap: "0.4rem", marginTop: "1rem", paddingTop: "1rem", borderTop: `1px solid ${COLORS.border}` }}>
-                              <button className="chip" onClick={() => handleEdit(featured)}>✎ Edit</button>
-                              <button className="chip del" onClick={() => handleDelete(featured.id)}>✕ Remove</button>
-                            </div>
-                          )}
+                        <p style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: "1rem", color: COLORS.white, lineHeight: 1.3, margin: 0 }}>{article.title}</p>
+                        {article.description && <p style={{ color: COLORS.grey, fontSize: "0.82rem", margin: 0, lineHeight: 1.55, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden", fontFamily: "'Source Serif 4',serif" }}>{stripHtml(article.description)}</p>}
+                        <div style={{ marginTop: "auto", paddingTop: "0.5rem" }}>
+                          <a href={article.link} target="_blank" rel="noopener noreferrer" className="read-link">{isYT(article.link) ? "▶ Watch Now" : "Read More"} →</a>
                         </div>
                       </div>
                     </div>
-                  )}
-                  {rest.length > 0 && (
-                    <>
-                      <div className="sec-label" style={{ marginBottom: "1rem" }}>Latest Stories</div>
-                      <div className={loaded ? "s3" : ""} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(290px,1fr))", gap: "1px", background: COLORS.border }}>
-                        {rest.map(item => (
-                          <div key={item.id} className="card">
-                            {item.imageUrl && <img src={item.imageUrl} alt="" onError={e => { e.target.style.display = "none"; }} style={{ width: "100%", height: "160px", objectFit: "cover", display: "block" }} />}
-                            <div style={{ padding: "1.3rem", display: "flex", flexDirection: "column", flex: 1 }}>
-                            <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.7rem", flexWrap: "wrap" }}>
-                              <span className="cat-tag" style={{ background: `${getCatColor(item.category)}18`, color: getCatColor(item.category) }}>{getCatLabel(item.category)}</span>
-                              {isYT(item.url) && <span className="cat-tag" style={{ background: "#FF000012", color: "#FF5555", fontSize: "0.58rem" }}>▶ VIDEO</span>}
-                            </div>
-                            <h3 className="story-title" style={{ fontSize: "1.02rem", marginBottom: "0.65rem" }}>{item.title}</h3>
-                            {item.note && <p className="note-text" style={{ marginBottom: "0.75rem", fontSize: "0.84rem" }}>{item.note}</p>}
-                            <div style={{ marginTop: "auto", paddingTop: "0.75rem", borderTop: `1px solid ${COLORS.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                              <span className="meta">{timeAgo(item.date || item.pubDate)}{item.source ? ` · ${item.source}` : ""}</span>
-                              <a href={item.url || item.link} target="_blank" rel="noopener noreferrer" className="read-link" style={{ fontSize: "0.66rem" }}>{isYT(item.url || item.link) ? "▶ Watch" : "Read →"}</a>
-                            </div>
-                            {adminMode && (
-                              <div style={{ display: "flex", gap: "0.35rem", marginTop: "0.7rem" }}>
-                                <button className="chip" onClick={() => handleEdit(item)}>✎</button>
-                                <button className="chip del" onClick={() => handleDelete(item.id)}>✕</button>
-                              </div>
-                            )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </>
-                  )}
-                </>
+                  ))}
+                </div>
               )}
             </>
           )}
