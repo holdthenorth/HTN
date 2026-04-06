@@ -42,7 +42,7 @@ const TICKER_ITEMS = [
 ];
 
 
-const ADMIN_PW = "holdthenorth";
+const ADMIN_PW = "maple2024";
 
 function HTNLogo({ height = 52 }) {
   const scale = height / 80;
