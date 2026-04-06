@@ -8,6 +8,7 @@ import RSSDashboard from "./RSSDashboard";
 import StoryPage from "./StoryPage";
 import { AuthProvider, useAuth } from "./AuthContext";
 import AuthModal from "./AuthModal";
+import MediaKit from "./pages/MediaKit";
 const COLORS = {
   red: "#C8102E",
   redDark: "#A00D24",
@@ -259,6 +260,7 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
                 {[{ id: "news", label: "News" }, { id: "about", label: "About" }, { id: "submit", label: "Submit Your Work" }].map(p => (
                   <button key={p.id} className={`nav-btn ${activePage === p.id ? "active" : ""}`} onClick={() => setActivePage(p.id)}>{p.label}</button>
                 ))}
+                <Link to="/media-kit" className="nav-btn" style={{ textDecoration: "none" }}>Press</Link>
 
                 {user ? (
                   <div style={{ position: "relative", zIndex: 101 }}>
@@ -449,6 +451,7 @@ export function App() {
     <Routes>
       <Route path="/" element={<HTNNews showLoader={showLoader} onLoaderComplete={() => setShowLoader(false)} />} />
       <Route path="/story/:storyId" element={<StoryPage />} />
+      <Route path="/media-kit" element={<MediaKit />} />
       <Route path="/htn-command" element={
         adminAuth ? <RSSDashboard /> : (
           <div style={{ background: "#0D1117", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
