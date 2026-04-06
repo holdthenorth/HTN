@@ -32,6 +32,7 @@ const ARTICLE_CATEGORIES = [
   { id: "street-level", label: "Street Level" },
   { id: "trump-watch",  label: "Trump Watch" },
   { id: "the-pitch",    label: "The Pitch" },
+  { id: "on-the-ground",  label: "On the Ground" },
 ];
 
 const SOURCES = [

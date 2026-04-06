@@ -101,17 +101,19 @@ export default function StoryPage() {
     setCommentError("");
     setSubmitting(true);
     const content = commentText.trim();
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from("Comments")
-      .insert({ user_id: user.id, article_url: articleUrl, content })
-      .select("id, created_at")
-      .single();
+      .insert({ user_id: user.id, article_url: articleUrl, content });
     setSubmitting(false);
-    if (error) { setCommentError("Failed to post comment. Please try again."); return; }
+    if (error) {
+      console.error("Comment insert error:", error);
+      setCommentError(`Failed to post comment: ${error.message}`);
+      return;
+    }
     setComments(prev => [{
-      id: data.id,
+      id: `optimistic-${Date.now()}`,
       content,
-      created_at: data.created_at,
+      created_at: new Date().toISOString(),
       user_id: user.id,
       profiles: { username: profile?.username || user.email.split("@")[0] },
     }, ...prev]);

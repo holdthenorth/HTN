@@ -1,0 +1,5 @@
+[33m08af437[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m fix: capitalize Comments table name in queries
+[33m1828d35[m fix: comments and sign out
+[33mddd2d2c[m feat: wire up comments to Supabase
+[33m9e22d2a[m feat: add Supabase authentication
+[33m946feab[m fix: single YouTube video URL detection via oEmbed
