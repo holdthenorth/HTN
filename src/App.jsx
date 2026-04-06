@@ -29,7 +29,8 @@ const CATEGORIES = [
   { id: "voices",       label: "Voices",       color: "#2A9C6F" },
   { id: "street-level", label: "Street Level", color: "#C47A1A" },
   { id: "trump-watch",  label: "Trump Watch",  color: "#8B2FC9" },
-  { id: "the-pitch",    label: "The Pitch",    color: "#1A8FA0" },
+  { id: "the-pitch",      label: "The Pitch",      color: "#1A8FA0" },
+  { id: "on-the-ground",  label: "On the Ground",  color: "#7A6C2E" },
 ];
 
 const TICKER_ITEMS = [

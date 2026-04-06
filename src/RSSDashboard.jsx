@@ -48,6 +48,9 @@ const SOURCES = [
   { id: "ling",     name: "Justin Ling",      category: "Independent", url: "https://justinling.substack.com/feed" },
   { id: "glavin",   name: "Terry Glavin",     category: "Independent", url: "https://therealstory.substack.com/feed" },
   { id: "rabble",   name: "Rabble.ca",        category: "Independent", url: "https://rabble.ca/feed" },
+  { id: "amnesty",  name: "Amnesty International", category: "On the Ground", url: "https://www.amnesty.org/en/feed/" },
+  { id: "hrw",      name: "Human Rights Watch",    category: "On the Ground", url: "https://www.hrw.org/rss/news" },
+  { id: "ccla",     name: "Canadian Civil Liberties Association", category: "On the Ground", url: "https://ccla.org/feed/" },
 ];
 
 function parseDate(dateStr) {
