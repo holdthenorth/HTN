@@ -222,6 +222,8 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
           .news-row{display:flex;gap:1rem;padding:1rem 0;border-bottom:1px solid #1E2A3A;text-decoration:none;transition:background 0.2s}
           .news-row:hover{background:#1A2332}
           .news-row:last-child{border-bottom:none}
+          .htn-footer-grid{display:grid;grid-template-columns:1fr 2fr 1fr;gap:3rem;align-items:start}
+          @media(max-width:768px){.htn-footer-grid{grid-template-columns:1fr;gap:2rem}}
         `}</style>
 
         {/* TICKER */}
@@ -410,11 +412,106 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
         </main>
 
         {/* FOOTER */}
-        <footer style={{ borderTop: `1px solid ${COLORS.border}`, background: COLORS.navyMid }}>
-          <div style={{ maxWidth: 1200, margin: "0 auto", padding: "1.2rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.8rem" }}>
-            <img src="/htncrop.png" alt="HTN News Canada" style={{ height: "36px" }} />
-            <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: "0.6rem", letterSpacing: "0.15em", color: "#3A4A5A", textTransform: "uppercase" }}>Independent · Curated · Canadian · © 2025</span>
+        <footer style={{ background: "#080d12", borderTop: `3px solid ${COLORS.red}`, fontFamily: "'Barlow Condensed',sans-serif" }}>
+
+          {/* MAIN FOOTER BODY */}
+          <div className="htn-footer-grid" style={{ maxWidth: 1200, margin: "0 auto", padding: "3rem 1.2rem 2.5rem" }}>
+
+            {/* LEFT — Logo + tagline */}
+            <div>
+              <img src="/htncrop.png" alt="HTN News Canada" style={{ height: "44px", display: "block", marginBottom: "1rem" }} />
+              <p style={{ fontSize: "0.72rem", letterSpacing: "0.08em", color: COLORS.grey, lineHeight: 1.65, maxWidth: 220, margin: "0 0 1.2rem" }}>
+                Canada's independent editorial news platform. Signal over noise. Built for Canadians who demand more than headlines.
+              </p>
+              <a href="https://holdthenorth.news" style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: "0.62rem", letterSpacing: "0.18em", textTransform: "uppercase", color: COLORS.red, textDecoration: "none" }}>holdthenorth.news</a>
+            </div>
+
+            {/* MIDDLE — Nav columns */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem" }}>
+              <div>
+                <div style={{ fontSize: "0.58rem", letterSpacing: "0.22em", textTransform: "uppercase", color: COLORS.grey, marginBottom: "1rem", paddingBottom: "0.5rem", borderBottom: `1px solid ${COLORS.border}` }}>Navigate</div>
+                <nav style={{ display: "flex", flexDirection: "column", gap: "0.55rem" }}>
+                  {[
+                    { label: "News", action: () => setActivePage("news") },
+                    { label: "About HTN", action: () => setActivePage("about") },
+                    { label: "Submit Your Work", action: () => setActivePage("submit") },
+                  ].map(({ label, action }) => (
+                    <button key={label} onClick={action} style={{ background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer", fontFamily: "'Barlow Condensed',sans-serif", fontSize: "0.78rem", letterSpacing: "0.08em", color: "#6A7A8A", transition: "color 0.2s" }}
+                      onMouseEnter={e => e.target.style.color = COLORS.offWhite}
+                      onMouseLeave={e => e.target.style.color = "#6A7A8A"}>
+                      {label}
+                    </button>
+                  ))}
+                  <Link to="/media-kit" style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: "0.78rem", letterSpacing: "0.08em", color: "#6A7A8A", textDecoration: "none", transition: "color 0.2s" }}
+                    onMouseEnter={e => e.target.style.color = COLORS.offWhite}
+                    onMouseLeave={e => e.target.style.color = "#6A7A8A"}>
+                    Press &amp; Media Kit
+                  </Link>
+                </nav>
+              </div>
+              <div>
+                <div style={{ fontSize: "0.58rem", letterSpacing: "0.22em", textTransform: "uppercase", color: COLORS.grey, marginBottom: "1rem", paddingBottom: "0.5rem", borderBottom: `1px solid ${COLORS.border}` }}>Legal</div>
+                <nav style={{ display: "flex", flexDirection: "column", gap: "0.55rem" }}>
+                  {[
+                    { label: "Privacy Policy", href: "/privacy" },
+                    { label: "Terms of Use", href: "/terms" },
+                  ].map(({ label, href }) => (
+                    <Link key={label} to={href} style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: "0.78rem", letterSpacing: "0.08em", color: "#6A7A8A", textDecoration: "none" }}
+                      onMouseEnter={e => e.target.style.color = COLORS.offWhite}
+                      onMouseLeave={e => e.target.style.color = "#6A7A8A"}>
+                      {label}
+                    </Link>
+                  ))}
+                </nav>
+              </div>
+            </div>
+
+            {/* RIGHT — Social */}
+            <div>
+              <div style={{ fontSize: "0.58rem", letterSpacing: "0.22em", textTransform: "uppercase", color: COLORS.grey, marginBottom: "1rem", paddingBottom: "0.5rem", borderBottom: `1px solid ${COLORS.border}` }}>Follow HTN</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                {/* Bluesky */}
+                <a href="https://bsky.app/profile/holdthenorth.news" target="_blank" rel="noopener noreferrer"
+                  style={{ display: "flex", alignItems: "center", gap: "0.65rem", textDecoration: "none", color: "#6A7A8A", transition: "color 0.2s" }}
+                  onMouseEnter={e => { e.currentTarget.style.color = COLORS.offWhite; }}
+                  onMouseLeave={e => { e.currentTarget.style.color = "#6A7A8A"; }}>
+                  {/* Bluesky butterfly icon */}
+                  <svg width="16" height="16" viewBox="0 0 360 320" fill="currentColor" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
+                    <path d="M180 141.964C163.68 112.519 126.639 51.985 89.882 32.116 68.232 20.247 39.327 16.427 21.517 34.483 2.644 53.617 5.496 82.438 18.447 100.58c8.89 12.37 23.49 18.927 38.14 21.085-15.247 2.607-33.665 11.497-39.673 50.504-8.008 51.51 43.396 65.798 78.34 46.394C135.04 199.33 163.054 167.99 180 141.964z"/>
+                    <path d="M180 141.964C196.32 112.519 233.361 51.985 270.118 32.116c21.65-11.869 50.555-15.689 68.365 2.367 18.873 19.134 16.021 47.955 3.07 66.097-8.89 12.37-23.49 18.927-38.14 21.085 15.247 2.607 33.665 11.497 39.673 50.504 8.008 51.51-43.396 65.798-78.34 46.394C224.96 199.33 196.946 167.99 180 141.964z"/>
+                  </svg>
+                  <div>
+                    <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: "0.78rem", letterSpacing: "0.08em", fontWeight: 700 }}>Bluesky</div>
+                    <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: "0.65rem", letterSpacing: "0.06em", opacity: 0.6 }}>@holdthenorth.news</div>
+                  </div>
+                </a>
+
+                {/* TikTok — coming soon */}
+                <div style={{ display: "flex", alignItems: "center", gap: "0.65rem", color: "#3A4A5A", cursor: "default" }}>
+                  <svg width="14" height="16" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
+                    <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.78a4.85 4.85 0 0 1-1.01-.09z"/>
+                  </svg>
+                  <div>
+                    <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: "0.78rem", letterSpacing: "0.08em", fontWeight: 700 }}>TikTok</div>
+                    <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: "0.65rem", letterSpacing: "0.06em", fontStyle: "italic" }}>@holdthenorth — coming soon</div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
+
+          {/* BOTTOM BAR */}
+          <div style={{ borderTop: `1px solid ${COLORS.border}`, background: "#050a0e" }}>
+            <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0.9rem 1.2rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem" }}>
+              <span style={{ fontSize: "0.6rem", letterSpacing: "0.18em", color: "#2E3E4E", textTransform: "uppercase" }}>
+                Independent · Curated · Canadian
+              </span>
+              <span style={{ fontSize: "0.6rem", letterSpacing: "0.12em", color: "#2E3E4E" }}>
+                © 2026 Hold the North · holdthenorth.news
+              </span>
+            </div>
+          </div>
+
         </footer>
 
         {/* LOGIN */}
