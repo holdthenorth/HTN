@@ -24,14 +24,15 @@ const COLORS = {
 };
 
 const CATEGORIES = [
-  { id: "all",          label: "All",         color: COLORS.red },
-  { id: "politics",     label: "Politics",     color: "#C8102E" },
-  { id: "world",        label: "World",        color: "#1A6FC4" },
-  { id: "voices",       label: "Voices",       color: "#2A9C6F" },
-  { id: "street-level", label: "Street Level", color: "#C47A1A" },
-  { id: "trump-watch",  label: "Trump Watch",  color: "#8B2FC9" },
-  { id: "the-pitch",      label: "The Pitch",      color: "#1A8FA0" },
-  { id: "on-the-ground",  label: "On the Ground",  color: "#7A6C2E" },
+  { id: "all",             label: "All",             color: COLORS.red },
+  { id: "politics",        label: "Politics",         color: "#C8102E" },
+  { id: "world",           label: "World",            color: "#1A6FC4" },
+  { id: "voices",          label: "Voices",           color: "#2A9C6F" },
+  { id: "street-level",    label: "Street Level",     color: "#C47A1A" },
+  { id: "trump-watch",     label: "Trump Watch",      color: "#8B2FC9" },
+  { id: "the-pitch",       label: "The Pitch",        color: "#1A8FA0" },
+  { id: "on-the-ground",   label: "On the Ground",    color: "#7A6C2E" },
+  { id: "standing-ground", label: "Standing Ground",  color: "#5A3E8A" },
 ];
 
 const TICKER_ITEMS = [
@@ -305,7 +306,8 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
             {activePage === "news" && (
               <div className={loaded ? "s2" : ""} style={{ marginTop: "0.9rem", display: "flex", gap: "0.3rem", flexWrap: "wrap", alignItems: "center" }}>
                 {CATEGORIES.map(c => (
-                  <button key={c.id} className={`cat-pill ${activeCategory === c.id ? "active" : ""}`} onClick={() => setActiveCategory(c.id)}
+                  <button key={c.id} className={`cat-pill ${activeCategory === c.id ? "active" : ""}`}
+                    onClick={() => { setActiveCategory(c.id); setActivePage("news"); }}
                     style={{ borderColor: activeCategory === c.id ? c.color : undefined, background: activeCategory === c.id ? c.color : undefined }}>
                     {c.label}
                   </button>
@@ -344,7 +346,9 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
 
           {/* NEWS PAGE */}
           {activePage === "news" && (() => {
-            const visibleArticles = activeCategory === "all" ? curated : curated.filter(a => a.category === activeCategory);
+            const seen = new Set();
+            const deduped = curated.filter(a => { if (seen.has(a.id)) return false; seen.add(a.id); return true; });
+            const visibleArticles = activeCategory === "all" ? deduped : deduped.filter(a => a.category === activeCategory);
             const catColor = CATEGORIES.find(c => c.id === activeCategory)?.color || COLORS.red;
             return visibleArticles.length === 0 ? (
               <div style={{ padding: "5rem", textAlign: "center", color: COLORS.grey, fontFamily: "'Barlow Condensed',sans-serif", fontSize: "1rem", letterSpacing: "0.08em" }}>
