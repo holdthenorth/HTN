@@ -347,7 +347,12 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
           {/* NEWS PAGE */}
           {activePage === "news" && (() => {
             const seen = new Set();
-            const deduped = curated.filter(a => { if (seen.has(a.id)) return false; seen.add(a.id); return true; });
+            const deduped = curated.filter(a => {
+              const key = a.link || a.url || a.id;
+              if (seen.has(key)) return false;
+              seen.add(key);
+              return true;
+            });
             const visibleArticles = activeCategory === "all" ? deduped : deduped.filter(a => a.category === activeCategory);
             const catColor = CATEGORIES.find(c => c.id === activeCategory)?.color || COLORS.red;
             return visibleArticles.length === 0 ? (
