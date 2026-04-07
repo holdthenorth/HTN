@@ -10,6 +10,7 @@ import { AuthProvider, useAuth } from "./AuthContext";
 import AuthModal from "./AuthModal";
 import MediaKit from "./pages/MediaKit";
 import VoicesPage from "./pages/VoicesPage";
+import { ThePitchIndex, ThePitchPost } from "./pages/ThePitch";
 const COLORS = {
   red: "#C8102E",
   redDark: "#A00D24",
@@ -144,7 +145,8 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
   useEffect(() => {
     const hasArticles = sessionStorage.getItem("htn-curated-cache");
     const hasVoices = sessionStorage.getItem("htn-voices-cache");
-    if (hasArticles && hasVoices) return;
+    const hasPitch = sessionStorage.getItem("htn-pitch-cache");
+    if (hasArticles && hasVoices && hasPitch) return;
     fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_ID}/latest`, {
       headers: { "X-Master-Key": JSONBIN_KEY }
     })
@@ -152,8 +154,10 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
     .then(data => {
       const articles = data.record?.articles || [];
       const voices = data.record?.voices || [];
+      const pitchPosts = data.record?.pitchPosts || [];
       sessionStorage.setItem("htn-curated-cache", JSON.stringify(articles));
       sessionStorage.setItem("htn-voices-cache", JSON.stringify(voices));
+      sessionStorage.setItem("htn-pitch-cache", JSON.stringify(pitchPosts));
       setCurated(articles);
     })
     .catch(() => setCurated([]));
@@ -286,6 +290,7 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
                   <button key={p.id} className={`nav-btn ${activePage === p.id ? "active" : ""}`} onClick={() => setActivePage(p.id)}>{p.label}</button>
                 ))}
                 <Link to="/voices" className="nav-btn" style={{ textDecoration: "none" }}>Voices</Link>
+                <Link to="/the-pitch" className="nav-btn" style={{ textDecoration: "none" }}>The Pitch</Link>
                 <Link to="/media-kit" className="nav-btn" style={{ textDecoration: "none" }}>Press</Link>
 
                 {user ? (
@@ -479,6 +484,11 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
                     onMouseLeave={e => e.target.style.color = "#6A7A8A"}>
                     Voices
                   </Link>
+                  <Link to="/the-pitch" style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: "0.78rem", letterSpacing: "0.08em", color: "#6A7A8A", textDecoration: "none", transition: "color 0.2s" }}
+                    onMouseEnter={e => e.target.style.color = COLORS.offWhite}
+                    onMouseLeave={e => e.target.style.color = "#6A7A8A"}>
+                    The Pitch
+                  </Link>
                   <Link to="/media-kit" style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: "0.78rem", letterSpacing: "0.08em", color: "#6A7A8A", textDecoration: "none", transition: "color 0.2s" }}
                     onMouseEnter={e => e.target.style.color = COLORS.offWhite}
                     onMouseLeave={e => e.target.style.color = "#6A7A8A"}>
@@ -586,6 +596,8 @@ export function App() {
       <Route path="/" element={<HTNNews showLoader={showLoader} onLoaderComplete={() => setShowLoader(false)} />} />
       <Route path="/story/:storyId" element={<StoryPage />} />
       <Route path="/voices" element={<VoicesPage />} />
+      <Route path="/the-pitch" element={<ThePitchIndex />} />
+      <Route path="/the-pitch/:slug" element={<ThePitchPost />} />
       <Route path="/media-kit" element={<MediaKit />} />
       <Route path="/htn-command" element={
         adminAuth ? <RSSDashboard /> : (

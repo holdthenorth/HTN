@@ -117,20 +117,27 @@ export default function RSSDashboard() {
   const [voices, setVoices] = useState([]);
   const [voiceForm, setVoiceForm] = useState(null); // null = hidden
   const [voiceFormMode, setVoiceFormMode] = useState("add");
-
   const EMPTY_VOICE = { id: "", name: "", photo: "", bio: "", whyHTN: "", feedUrl: "" };
+
+  const [pitchPosts, setPitchPosts] = useState([]);
+  const [pitchForm, setPitchForm] = useState(null); // null = hidden
+  const [pitchFormMode, setPitchFormMode] = useState("add");
+  const EMPTY_PITCH = { id: "", title: "", byline: "", body: "", photo: "" };
 
   const allSources = [...SOURCES, ...customSources];
 
   useEffect(() => {
     if (!authed) return;
     fetchAll();
-    // Load voices from JSONBin
+    // Load voices + pitch posts from JSONBin
     fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_ID}/latest`, {
       headers: { "X-Master-Key": JSONBIN_KEY },
     })
       .then(r => r.json())
-      .then(data => setVoices(data.record?.voices || []))
+      .then(data => {
+        setVoices(data.record?.voices || []);
+        setPitchPosts(data.record?.pitchPosts || []);
+      })
       .catch(() => {});
   }, [authed]);
 
@@ -221,11 +228,11 @@ export default function RSSDashboard() {
     else localStorage.removeItem("htn-hero");
   }
 
-  async function putToJsonBin(articles, voicesList) {
+  async function putToJsonBin(articles, voicesList, posts) {
     const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_ID}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json", "X-Master-Key": JSONBIN_KEY },
-      body: JSON.stringify({ articles, voices: voicesList }),
+      body: JSON.stringify({ articles, voices: voicesList, pitchPosts: posts }),
     });
     if (!res.ok) throw new Error();
   }
@@ -238,7 +245,7 @@ export default function RSSDashboard() {
     if (ordered.length === 0) return;
     setSaveStatus("saving");
     try {
-      await putToJsonBin(ordered, voices);
+      await putToJsonBin(ordered, voices, pitchPosts);
       setSaveStatus("ok");
       setTimeout(() => setSaveStatus(null), 3000);
     } catch {
@@ -247,22 +254,63 @@ export default function RSSDashboard() {
     }
   }
 
+  async function fetchCurrentBin() {
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_ID}/latest`, {
+      headers: { "X-Master-Key": JSONBIN_KEY },
+    });
+    const data = await res.json();
+    return data.record || {};
+  }
+
   async function saveVoices(updatedVoices) {
     setSaveStatus("saving");
     try {
-      // GET current articles so voices-only saves don't wipe them
-      const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_ID}/latest`, {
-        headers: { "X-Master-Key": JSONBIN_KEY },
-      });
-      const data = await res.json();
-      const currentArticles = data.record?.articles || [];
-      await putToJsonBin(currentArticles, updatedVoices);
+      const current = await fetchCurrentBin();
+      await putToJsonBin(current.articles || [], updatedVoices, current.pitchPosts || []);
       setSaveStatus("ok");
       setTimeout(() => setSaveStatus(null), 3000);
     } catch {
       setSaveStatus("error");
       setTimeout(() => setSaveStatus(null), 4000);
     }
+  }
+
+  async function savePitchPosts(updatedPosts) {
+    setSaveStatus("saving");
+    try {
+      const current = await fetchCurrentBin();
+      await putToJsonBin(current.articles || [], current.voices || [], updatedPosts);
+      setSaveStatus("ok");
+      setTimeout(() => setSaveStatus(null), 3000);
+    } catch {
+      setSaveStatus("error");
+      setTimeout(() => setSaveStatus(null), 4000);
+    }
+  }
+
+  function slugify(str) {
+    return str.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  }
+
+  function addOrUpdatePitch() {
+    if (!pitchForm.title.trim() || !pitchForm.body.trim()) return;
+    let updated;
+    if (pitchFormMode === "add") {
+      const slug = slugify(pitchForm.title);
+      const newPost = { ...pitchForm, id: `pitch-${Date.now()}`, slug, publishedAt: new Date().toISOString() };
+      updated = [newPost, ...pitchPosts];
+    } else {
+      updated = pitchPosts.map(p => p.id === pitchForm.id ? { ...pitchForm, slug: pitchForm.slug || slugify(pitchForm.title) } : p);
+    }
+    setPitchPosts(updated);
+    setPitchForm(null);
+    savePitchPosts(updated);
+  }
+
+  function deletePitch(id) {
+    const updated = pitchPosts.filter(p => p.id !== id);
+    setPitchPosts(updated);
+    savePitchPosts(updated);
   }
 
   function addOrUpdateVoice() {
@@ -353,7 +401,7 @@ export default function RSSDashboard() {
 
       {/* TAB BAR */}
       <div style={{ display: "flex", gap: "0.25rem", marginBottom: "1.5rem", borderBottom: `1px solid ${COLORS.border}` }}>
-        {[["articles", "📰 ARTICLES FEED"], ["voices", "🎙 VOICES"]].map(([tab, label]) => (
+        {[["articles", "📰 ARTICLES FEED"], ["voices", "🎙 VOICES"], ["pitch", "✍ THE PITCH"]].map(([tab, label]) => (
           <button key={tab} onClick={() => setActiveTab(tab)} style={{ background: activeTab === tab ? COLORS.red : "transparent", color: activeTab === tab ? COLORS.white : COLORS.grey, border: "none", borderBottom: activeTab === tab ? `2px solid ${COLORS.red}` : "2px solid transparent", padding: "0.5rem 1.2rem", cursor: "pointer", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.1em", marginBottom: "-1px" }}>
             {label}
           </button>
@@ -429,6 +477,91 @@ export default function RSSDashboard() {
                       style={{ background: "transparent", color: COLORS.grey, border: `1px solid ${COLORS.border}`, borderRadius: "3px", padding: "0.25rem 0.65rem", cursor: "pointer", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.7rem", letterSpacing: "0.05em" }}>✎ EDIT</button>
                     <button onClick={() => deleteVoice(v.id)}
                       style={{ background: "transparent", color: COLORS.grey, border: `1px solid ${COLORS.border}`, borderRadius: "3px", padding: "0.25rem 0.65rem", cursor: "pointer", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.7rem", letterSpacing: "0.05em" }}>✕ REMOVE</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* PITCH TAB */}
+      {activeTab === "pitch" && (
+        <div>
+          {/* Header */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+            <span style={{ fontSize: "0.65rem", letterSpacing: "0.18em", color: COLORS.grey, textTransform: "uppercase" }}>
+              {pitchPosts.length} {pitchPosts.length === 1 ? "post" : "posts"} published
+            </span>
+            <button onClick={() => { setPitchFormMode("add"); setPitchForm({ ...EMPTY_PITCH }); }}
+              style={{ background: COLORS.card, color: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "4px", padding: "0.35rem 1rem", cursor: "pointer", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.8rem", letterSpacing: "0.06em" }}>
+              + NEW POST
+            </button>
+          </div>
+
+          {/* Add / Edit Form */}
+          {pitchForm && (
+            <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderTop: `3px solid ${COLORS.red}`, borderRadius: "6px", padding: "1.5rem", marginBottom: "1.5rem" }}>
+              <div style={{ color: COLORS.red, fontSize: "0.65rem", letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: "1.25rem" }}>
+                {pitchFormMode === "add" ? "New Post" : "Edit Post"}
+              </div>
+
+              {[["title", "Headline", "text", "Story headline…"], ["byline", "Byline", "text", "By Jane Smith"], ["photo", "Photo URL (optional)", "text", "https://…"]].map(([field, label, type, ph]) => (
+                <div key={field} style={{ marginBottom: "0.75rem" }}>
+                  <div style={{ fontSize: "0.6rem", letterSpacing: "0.15em", color: COLORS.grey, textTransform: "uppercase", marginBottom: "0.3rem" }}>{label}</div>
+                  <input type={type} value={pitchForm[field]} placeholder={ph}
+                    onChange={e => setPitchForm({ ...pitchForm, [field]: e.target.value })}
+                    style={{ width: "100%", background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: "4px", color: COLORS.white, padding: "0.45rem 0.75rem", fontSize: "0.88rem", fontFamily: "'Barlow Condensed', sans-serif", boxSizing: "border-box" }} />
+                </div>
+              ))}
+
+              <div style={{ marginBottom: "1rem" }}>
+                <div style={{ fontSize: "0.6rem", letterSpacing: "0.15em", color: COLORS.grey, textTransform: "uppercase", marginBottom: "0.3rem" }}>Body</div>
+                <textarea value={pitchForm.body} placeholder="Write your post here…" rows={12}
+                  onChange={e => setPitchForm({ ...pitchForm, body: e.target.value })}
+                  style={{ width: "100%", background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: "4px", color: COLORS.white, padding: "0.6rem 0.75rem", fontSize: "0.9rem", fontFamily: "Georgia, serif", lineHeight: 1.7, resize: "vertical", boxSizing: "border-box" }} />
+                <div style={{ fontSize: "0.6rem", color: COLORS.grey, marginTop: "0.3rem", letterSpacing: "0.06em" }}>
+                  Separate paragraphs with a blank line. Basic markdown: **bold**, *italic*, [text](url)
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
+                <button onClick={() => setPitchForm(null)}
+                  style={{ background: "transparent", color: COLORS.grey, border: `1px solid ${COLORS.border}`, borderRadius: "4px", padding: "0.45rem 1rem", cursor: "pointer", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.8rem", letterSpacing: "0.06em" }}>
+                  CANCEL
+                </button>
+                <button onClick={addOrUpdatePitch}
+                  disabled={!pitchForm.title.trim() || !pitchForm.body.trim()}
+                  style={{ background: COLORS.red, color: COLORS.white, border: "none", borderRadius: "4px", padding: "0.45rem 1.2rem", cursor: "pointer", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.08em", opacity: !pitchForm.title.trim() || !pitchForm.body.trim() ? 0.5 : 1 }}>
+                  {saveStatus === "saving" ? "⟳ SAVING…" : pitchFormMode === "add" ? "✓ PUBLISH POST" : "✓ SAVE CHANGES"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Posts list */}
+          {pitchPosts.length === 0 ? (
+            <div style={{ color: COLORS.grey, textAlign: "center", padding: "4rem", fontSize: "0.9rem" }}>No posts yet. Click + NEW POST to write your first.</div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              {pitchPosts.map(p => (
+                <div key={p.id} style={{ display: "flex", alignItems: "flex-start", gap: "1rem", padding: "1rem", borderTop: `1px solid ${COLORS.border}`, background: COLORS.bg }}>
+                  {p.photo && <img src={p.photo} alt="" onError={e => e.target.style.display = "none"} style={{ width: 60, height: 60, objectFit: "cover", borderRadius: "4px", flexShrink: 0 }} />}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ color: COLORS.white, fontSize: "0.92rem", fontWeight: 700, marginBottom: "0.15rem", fontFamily: "Georgia, serif" }}>{p.title}</div>
+                    <div style={{ color: COLORS.grey, fontSize: "0.65rem", letterSpacing: "0.06em", marginBottom: "0.25rem" }}>
+                      {p.byline && <span>{p.byline} · </span>}
+                      {p.publishedAt && <span>{new Date(p.publishedAt).toLocaleDateString("en-CA", { month: "short", day: "numeric", year: "numeric" })}</span>}
+                    </div>
+                    <div style={{ color: COLORS.grey, fontSize: "0.75rem", letterSpacing: "0.04em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      /the-pitch/{p.slug}
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: "0.4rem", flexShrink: 0 }}>
+                    <button onClick={() => { setPitchFormMode("edit"); setPitchForm({ ...p }); }}
+                      style={{ background: "transparent", color: COLORS.grey, border: `1px solid ${COLORS.border}`, borderRadius: "3px", padding: "0.25rem 0.65rem", cursor: "pointer", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.7rem", letterSpacing: "0.05em" }}>✎ EDIT</button>
+                    <button onClick={() => deletePitch(p.id)}
+                      style={{ background: "transparent", color: COLORS.grey, border: `1px solid ${COLORS.border}`, borderRadius: "3px", padding: "0.25rem 0.65rem", cursor: "pointer", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.7rem", letterSpacing: "0.05em" }}>✕ DELETE</button>
                   </div>
                 </div>
               ))}
