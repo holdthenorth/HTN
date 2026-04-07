@@ -2,7 +2,7 @@ const JSONBIN_ID = import.meta.env.VITE_JSONBIN_ID;
 const JSONBIN_KEY = import.meta.env.VITE_JSONBIN_KEY;
 
 import { useState, useEffect } from "react";
-import { Routes, Route, Link } from 'react-router-dom';
+import { Routes, Route, Link, NavLink, useLocation } from 'react-router-dom';
 import MapleLeafLoader from "./MapleLeafLoader";
 import RSSDashboard from "./RSSDashboard";
 import StoryPage from "./StoryPage";
@@ -11,6 +11,8 @@ import AuthModal from "./AuthModal";
 import MediaKit from "./pages/MediaKit";
 import VoicesPage from "./pages/VoicesPage";
 import { ThePitchIndex, ThePitchPost } from "./pages/ThePitch";
+import AboutPage from "./pages/AboutPage";
+import SubmitPage from "./pages/SubmitPage";
 const COLORS = {
   red: "#C8102E",
   redDark: "#A00D24",
@@ -137,7 +139,7 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
   const [toast, setToast] = useState("");
   const [tickerPos, setTickerPos] = useState(0);
   const [loaded, setLoaded] = useState(false);
-  const [activePage, setActivePage] = useState("news");
+  const location = useLocation();
   const [curated, setCurated] = useState(() => {
     try { const c = sessionStorage.getItem("htn-curated-cache"); return c ? JSON.parse(c) : []; } catch { return []; }
   });
@@ -268,7 +270,7 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
             <div style={{ display: "flex", gap: "0.5rem", flexShrink: 0 }}>
               {adminMode ? (
                 <>
-                  <button className="chip" style={{ color: COLORS.red, borderColor: "rgba(200,16,46,0.4)" }} onClick={() => { setShowForm(!showForm); setEditId(null); setForm({ title: "", category: "canadian-politics", url: "", date: "", source: "", note: "", imageUrl: "", featured: false }); setActivePage("news"); }}>+ Add</button>
+                  <button className="chip" style={{ color: COLORS.red, borderColor: "rgba(200,16,46,0.4)" }} onClick={() => { setShowForm(!showForm); setEditId(null); setForm({ title: "", category: "canadian-politics", url: "", date: "", source: "", note: "", imageUrl: "", featured: false }); }}>+ Add</button>
                   <button className="chip del" onClick={() => { setAdminMode(false); resetForm(); }}>Exit</button>
                 </>
               ) : (
@@ -282,16 +284,13 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
         <header style={{ background: COLORS.navy, borderBottom: `3px solid ${COLORS.red}` }}>
           <div style={{ maxWidth: 1200, margin: "0 auto", padding: "1rem 1.2rem" }}>
             <div className={loaded ? "s1" : ""} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem" }}>
-              <div style={{ cursor: "pointer" }} onClick={() => setActivePage("news")}>
+              <Link to="/" style={{ textDecoration: "none" }}>
                 <img src="/htncrop.png" alt="HTN News Canada" style={{ height: "58px" }} />
-              </div>
+              </Link>
               <nav style={{ display: "flex", gap: "1.6rem", alignItems: "center" }}>
-                {[{ id: "news", label: "News" }, { id: "about", label: "About" }, { id: "submit", label: "Submit Your Work" }].map(p => (
-                  <button key={p.id} className={`nav-btn ${activePage === p.id ? "active" : ""}`} onClick={() => setActivePage(p.id)}>{p.label}</button>
+                {[{ to: "/", label: "News", end: true }, { to: "/about", label: "About" }, { to: "/submit", label: "Submit Your Work" }, { to: "/voices", label: "Voices" }, { to: "/the-pitch", label: "The Pitch" }, { to: "/media-kit", label: "Press" }].map(({ to, label, end }) => (
+                  <NavLink key={to} to={to} end={end} className={({ isActive }) => `nav-btn${isActive ? " active" : ""}`} style={{ textDecoration: "none" }}>{label}</NavLink>
                 ))}
-                <Link to="/voices" className="nav-btn" style={{ textDecoration: "none" }}>Voices</Link>
-                <Link to="/the-pitch" className="nav-btn" style={{ textDecoration: "none" }}>The Pitch</Link>
-                <Link to="/media-kit" className="nav-btn" style={{ textDecoration: "none" }}>Press</Link>
 
                 {user ? (
                   <div style={{ position: "relative", zIndex: 101 }}>
@@ -331,11 +330,11 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
                 )}
               </nav>
             </div>
-            {activePage === "news" && (
+            {location.pathname === "/" && (
               <div className={loaded ? "s2" : ""} style={{ marginTop: "0.9rem", display: "flex", gap: "0.3rem", flexWrap: "wrap", alignItems: "center" }}>
                 {CATEGORIES.map(c => (
                   <button key={c.id} className={`cat-pill ${activeCategory === c.id ? "active" : ""}`}
-                    onClick={() => { setActiveCategory(c.id); setActivePage("news"); }}
+                    onClick={() => setActiveCategory(c.id)}
                     style={{ borderColor: activeCategory === c.id ? c.color : undefined, background: activeCategory === c.id ? c.color : undefined }}>
                     {c.label}
                   </button>
@@ -373,7 +372,7 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
           )}
 
           {/* NEWS PAGE */}
-          {activePage === "news" && (() => {
+          {location.pathname === "/" && (() => {
             const seen = new Set();
             const deduped = curated.filter(a => {
               const key = a.link || a.url || a.id;
@@ -411,41 +410,6 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
             );
           })()}
 
-          {/* ABOUT */}
-          {activePage === "about" && (
-            <div className="htn-fade" style={{ maxWidth: 700 }}>
-              <div style={{ borderTop: `3px solid ${COLORS.red}`, paddingTop: "1.8rem", marginBottom: "1.8rem" }}>
-                <p style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, fontSize: "0.68rem", letterSpacing: "0.25em", color: COLORS.red, textTransform: "uppercase", marginBottom: "0.7rem" }}>Standing Ground</p>
-                <h1 style={{ fontFamily: "'Playfair Display',serif", fontWeight: 900, fontSize: "clamp(2rem,5vw,3rem)", color: COLORS.white, lineHeight: 1.1, marginBottom: "1.3rem" }}>Hold The North</h1>
-                <p style={{ fontFamily: "'Source Serif 4',serif", fontSize: "1.1rem", color: COLORS.greyLight, lineHeight: 1.78, marginBottom: "1.1rem" }}>HTN News Canada is an independent media curation platform built on one principle: <em>signal over noise.</em> We surface the stories, voices, and analysis that mainstream Canadian media either misses or buries.</p>
-                <p style={{ fontFamily: "'Source Serif 4',serif", fontSize: "1rem", color: COLORS.grey, lineHeight: 1.75, marginBottom: "1.1rem" }}>We believe Canada deserves independent journalism — journalists, podcasters, and Substackers who aren't beholden to corporate interests or government press releases. HTN exists to amplify those voices.</p>
-                <p style={{ fontFamily: "'Source Serif 4',serif", fontSize: "1rem", color: COLORS.grey, lineHeight: 1.75 }}>A firm, grounded Canadian perspective on sovereignty and curated journalism. Defending democracy and accountability through clear reporting.</p>
-              </div>
-              <div style={{ background: COLORS.navyLight, border: `1px solid ${COLORS.border}`, borderLeft: `3px solid ${COLORS.red}`, padding: "1.4rem" }}>
-                <p style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, fontSize: "0.68rem", letterSpacing: "0.2em", color: COLORS.red, textTransform: "uppercase", marginBottom: "0.5rem" }}>Support Independent Journalism</p>
-                <p style={{ fontFamily: "'Source Serif 4',serif", fontSize: "0.93rem", color: COLORS.grey, lineHeight: 1.65 }}>HTN memberships directly support the independent journalists and creators featured on this platform. No ads. No corporate funding. Just Canadians supporting Canadians.</p>
-              </div>
-            </div>
-          )}
-
-          {/* SUBMIT */}
-          {activePage === "submit" && (
-            <div className="htn-fade" style={{ maxWidth: 660 }}>
-              <div style={{ borderTop: `3px solid ${COLORS.red}`, paddingTop: "1.8rem", marginBottom: "1.8rem" }}>
-                <p style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, fontSize: "0.68rem", letterSpacing: "0.25em", color: COLORS.red, textTransform: "uppercase", marginBottom: "0.7rem" }}>For Creators & Journalists</p>
-                <h1 style={{ fontFamily: "'Playfair Display',serif", fontWeight: 900, fontSize: "clamp(1.7rem,4vw,2.5rem)", color: COLORS.white, lineHeight: 1.15, marginBottom: "1rem" }}>Submit Your Work to HTN</h1>
-                <p style={{ fontFamily: "'Source Serif 4',serif", fontSize: "1rem", color: COLORS.greyLight, lineHeight: 1.75, marginBottom: "1.8rem" }}>Are you an independent Canadian journalist, YouTuber, or Substack writer? We'd love to feature your work. HTN amplifies independent voices doing the real work.</p>
-              </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.9rem", marginBottom: "1.4rem" }}>
-                <div><label className="fl">Your Name / Publication</label><input className="fi" placeholder="e.g. The Maple / Jane Smith" /></div>
-                <div><label className="fl">Website, YouTube or Substack URL</label><input className="fi" placeholder="https://..." /></div>
-                <div><label className="fl">What You Cover</label><input className="fi" placeholder="e.g. Canadian politics, accountability journalism..." /></div>
-                <div><label className="fl">Why HTN Should Feature You</label><textarea className="fi" style={{ resize: "vertical", minHeight: 90 }} placeholder="Tell us about your work and why it matters to Canadians..." /></div>
-              </div>
-              <button className="btn-r" onClick={() => showToast("Thanks! We'll review your submission.")}>Submit for Review →</button>
-              <p style={{ fontFamily: "'Source Serif 4',serif", fontSize: "0.83rem", color: COLORS.grey, marginTop: "1rem", fontStyle: "italic" }}>All submissions are reviewed by the HTN curation team. We aim to respond within 5–7 business days.</p>
-            </div>
-          )}
         </main>
 
         {/* FOOTER */}
@@ -469,15 +433,15 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
                 <div style={{ fontSize: "0.58rem", letterSpacing: "0.22em", textTransform: "uppercase", color: COLORS.grey, marginBottom: "1rem", paddingBottom: "0.5rem", borderBottom: `1px solid ${COLORS.border}` }}>Navigate</div>
                 <nav style={{ display: "flex", flexDirection: "column", gap: "0.55rem" }}>
                   {[
-                    { label: "News", action: () => setActivePage("news") },
-                    { label: "About HTN", action: () => setActivePage("about") },
-                    { label: "Submit Your Work", action: () => setActivePage("submit") },
-                  ].map(({ label, action }) => (
-                    <button key={label} onClick={action} style={{ background: "none", border: "none", padding: 0, textAlign: "left", cursor: "pointer", fontFamily: "'Barlow Condensed',sans-serif", fontSize: "0.78rem", letterSpacing: "0.08em", color: "#6A7A8A", transition: "color 0.2s" }}
+                    { label: "News", to: "/" },
+                    { label: "About HTN", to: "/about" },
+                    { label: "Submit Your Work", to: "/submit" },
+                  ].map(({ label, to }) => (
+                    <Link key={label} to={to} style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: "0.78rem", letterSpacing: "0.08em", color: "#6A7A8A", textDecoration: "none", transition: "color 0.2s" }}
                       onMouseEnter={e => e.target.style.color = COLORS.offWhite}
                       onMouseLeave={e => e.target.style.color = "#6A7A8A"}>
                       {label}
-                    </button>
+                    </Link>
                   ))}
                   <Link to="/voices" style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: "0.78rem", letterSpacing: "0.08em", color: "#6A7A8A", textDecoration: "none", transition: "color 0.2s" }}
                     onMouseEnter={e => e.target.style.color = COLORS.offWhite}
@@ -595,6 +559,8 @@ export function App() {
     <Routes>
       <Route path="/" element={<HTNNews showLoader={showLoader} onLoaderComplete={() => setShowLoader(false)} />} />
       <Route path="/story/:storyId" element={<StoryPage />} />
+      <Route path="/about" element={<AboutPage />} />
+      <Route path="/submit" element={<SubmitPage />} />
       <Route path="/voices" element={<VoicesPage />} />
       <Route path="/the-pitch" element={<ThePitchIndex />} />
       <Route path="/the-pitch/:slug" element={<ThePitchPost />} />

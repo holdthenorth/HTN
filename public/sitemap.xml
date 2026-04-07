@@ -8,6 +8,20 @@
     <priority>1.0</priority>
   </url>
 
+  <!-- About -->
+  <url>
+    <loc>https://holdthenorth.news/about</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- Submit -->
+  <url>
+    <loc>https://holdthenorth.news/submit</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
   <!-- Voices -->
   <url>
     <loc>https://holdthenorth.news/voices</loc>
