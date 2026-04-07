@@ -112,11 +112,27 @@ export default function RSSDashboard() {
   const [notes, setNotes] = useState(() => {
     try { return JSON.parse(localStorage.getItem("htn-notes") || "{}"); } catch { return {}; }
   });
-  const [noteModal, setNoteModal] = useState(null); // { article } | null
+  const [noteModal, setNoteModal] = useState(null);
+  const [activeTab, setActiveTab] = useState("articles");
+  const [voices, setVoices] = useState([]);
+  const [voiceForm, setVoiceForm] = useState(null); // null = hidden
+  const [voiceFormMode, setVoiceFormMode] = useState("add");
+
+  const EMPTY_VOICE = { id: "", name: "", photo: "", bio: "", whyHTN: "", feedUrl: "" };
 
   const allSources = [...SOURCES, ...customSources];
 
-  useEffect(() => { if (authed) fetchAll(); }, [authed]);
+  useEffect(() => {
+    if (!authed) return;
+    fetchAll();
+    // Load voices from JSONBin
+    fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_ID}/latest`, {
+      headers: { "X-Master-Key": JSONBIN_KEY },
+    })
+      .then(r => r.json())
+      .then(data => setVoices(data.record?.voices || []))
+      .catch(() => {});
+  }, [authed]);
 
   async function fetchAll() {
     setLoading(true);
@@ -205,6 +221,15 @@ export default function RSSDashboard() {
     else localStorage.removeItem("htn-hero");
   }
 
+  async function putToJsonBin(articles, voicesList) {
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_ID}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", "X-Master-Key": JSONBIN_KEY },
+      body: JSON.stringify({ articles, voices: voicesList }),
+    });
+    if (!res.ok) throw new Error();
+  }
+
   async function saveFeatured() {
     const heroArticle = heroId ? articles.find(a => a.id === heroId) : null;
     const featuredArticles = articles.filter(a => featured.includes(a.id) && a.id !== heroId);
@@ -213,18 +238,50 @@ export default function RSSDashboard() {
     if (ordered.length === 0) return;
     setSaveStatus("saving");
     try {
-      const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_ID}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", "X-Master-Key": JSONBIN_KEY },
-        body: JSON.stringify({ articles: ordered }),
-      });
-      if (!res.ok) throw new Error();
+      await putToJsonBin(ordered, voices);
       setSaveStatus("ok");
       setTimeout(() => setSaveStatus(null), 3000);
     } catch {
       setSaveStatus("error");
       setTimeout(() => setSaveStatus(null), 4000);
     }
+  }
+
+  async function saveVoices(updatedVoices) {
+    setSaveStatus("saving");
+    try {
+      // GET current articles so voices-only saves don't wipe them
+      const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_ID}/latest`, {
+        headers: { "X-Master-Key": JSONBIN_KEY },
+      });
+      const data = await res.json();
+      const currentArticles = data.record?.articles || [];
+      await putToJsonBin(currentArticles, updatedVoices);
+      setSaveStatus("ok");
+      setTimeout(() => setSaveStatus(null), 3000);
+    } catch {
+      setSaveStatus("error");
+      setTimeout(() => setSaveStatus(null), 4000);
+    }
+  }
+
+  function addOrUpdateVoice() {
+    if (!voiceForm.name.trim() || !voiceForm.feedUrl.trim()) return;
+    let updated;
+    if (voiceFormMode === "add") {
+      updated = [...voices, { ...voiceForm, id: `voice-${Date.now()}` }];
+    } else {
+      updated = voices.map(v => v.id === voiceForm.id ? { ...voiceForm } : v);
+    }
+    setVoices(updated);
+    setVoiceForm(null);
+    saveVoices(updated);
+  }
+
+  function deleteVoice(id) {
+    const updated = voices.filter(v => v.id !== id);
+    setVoices(updated);
+    saveVoices(updated);
   }
 
   function addSource() {
@@ -294,7 +351,93 @@ export default function RSSDashboard() {
         </div>
       </div>
 
-      {heroArticle && (
+      {/* TAB BAR */}
+      <div style={{ display: "flex", gap: "0.25rem", marginBottom: "1.5rem", borderBottom: `1px solid ${COLORS.border}` }}>
+        {[["articles", "📰 ARTICLES FEED"], ["voices", "🎙 VOICES"]].map(([tab, label]) => (
+          <button key={tab} onClick={() => setActiveTab(tab)} style={{ background: activeTab === tab ? COLORS.red : "transparent", color: activeTab === tab ? COLORS.white : COLORS.grey, border: "none", borderBottom: activeTab === tab ? `2px solid ${COLORS.red}` : "2px solid transparent", padding: "0.5rem 1.2rem", cursor: "pointer", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.1em", marginBottom: "-1px" }}>
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* VOICES TAB */}
+      {activeTab === "voices" && (
+        <div>
+          {/* Voices header */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+            <span style={{ fontSize: "0.65rem", letterSpacing: "0.18em", color: COLORS.grey, textTransform: "uppercase" }}>
+              {voices.length} {voices.length === 1 ? "voice" : "voices"} configured
+            </span>
+            <button onClick={() => { setVoiceFormMode("add"); setVoiceForm({ ...EMPTY_VOICE }); }}
+              style={{ background: COLORS.card, color: COLORS.white, border: `1px solid ${COLORS.border}`, borderRadius: "4px", padding: "0.35rem 1rem", cursor: "pointer", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.8rem", letterSpacing: "0.06em" }}>
+              + ADD VOICE
+            </button>
+          </div>
+
+          {/* Add / Edit Form */}
+          {voiceForm && (
+            <div style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderTop: `3px solid ${COLORS.red}`, borderRadius: "6px", padding: "1.5rem", marginBottom: "1.5rem" }}>
+              <div style={{ color: COLORS.red, fontSize: "0.65rem", letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: "1rem" }}>
+                {voiceFormMode === "add" ? "Add New Voice" : "Edit Voice"}
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", marginBottom: "0.75rem" }}>
+                {[["name", "Display Name", "text", "e.g. Paul Wells"], ["photo", "Photo URL", "text", "https://..."], ["feedUrl", "RSS Feed URL", "text", "https://paulwells.substack.com/feed"]].map(([field, label, type, ph]) => (
+                  <div key={field} style={{ gridColumn: field === "feedUrl" ? "1 / -1" : undefined }}>
+                    <div style={{ fontSize: "0.6rem", letterSpacing: "0.15em", color: COLORS.grey, textTransform: "uppercase", marginBottom: "0.3rem" }}>{label}</div>
+                    <input type={type} value={voiceForm[field]} placeholder={ph}
+                      onChange={e => setVoiceForm({ ...voiceForm, [field]: e.target.value })}
+                      style={{ width: "100%", background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: "4px", color: COLORS.white, padding: "0.45rem 0.75rem", fontSize: "0.85rem", fontFamily: "'Barlow Condensed', sans-serif", boxSizing: "border-box" }} />
+                  </div>
+                ))}
+              </div>
+              {[["bio", "Short Bio", "Brief background on this voice…"], ["whyHTN", "Why HTN Features Them", "Editorial note — why this person belongs on HTN…"]].map(([field, label, ph]) => (
+                <div key={field} style={{ marginBottom: "0.75rem" }}>
+                  <div style={{ fontSize: "0.6rem", letterSpacing: "0.15em", color: COLORS.grey, textTransform: "uppercase", marginBottom: "0.3rem" }}>{label}</div>
+                  <textarea value={voiceForm[field]} placeholder={ph} rows={3}
+                    onChange={e => setVoiceForm({ ...voiceForm, [field]: e.target.value })}
+                    style={{ width: "100%", background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: "4px", color: COLORS.white, padding: "0.45rem 0.75rem", fontSize: "0.85rem", fontFamily: "'Barlow Condensed', sans-serif", resize: "vertical", boxSizing: "border-box" }} />
+                </div>
+              ))}
+              <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
+                <button onClick={() => setVoiceForm(null)} style={{ background: "transparent", color: COLORS.grey, border: `1px solid ${COLORS.border}`, borderRadius: "4px", padding: "0.45rem 1rem", cursor: "pointer", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.8rem", letterSpacing: "0.06em" }}>CANCEL</button>
+                <button onClick={addOrUpdateVoice} disabled={!voiceForm.name.trim() || !voiceForm.feedUrl.trim()}
+                  style={{ background: COLORS.red, color: COLORS.white, border: "none", borderRadius: "4px", padding: "0.45rem 1.2rem", cursor: "pointer", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.08em", opacity: !voiceForm.name.trim() || !voiceForm.feedUrl.trim() ? 0.5 : 1 }}>
+                  {saveStatus === "saving" ? "⟳ SAVING..." : voiceFormMode === "add" ? "✓ SAVE VOICE" : "✓ UPDATE VOICE"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Voices List */}
+          {voices.length === 0 ? (
+            <div style={{ color: COLORS.grey, textAlign: "center", padding: "4rem", fontSize: "0.9rem" }}>No voices added yet. Click + ADD VOICE to get started.</div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
+              {voices.map(v => (
+                <div key={v.id} style={{ display: "flex", alignItems: "center", gap: "1rem", padding: "0.85rem 1rem", borderTop: `1px solid ${COLORS.border}`, background: COLORS.bg }}>
+                  {v.photo ? (
+                    <img src={v.photo} alt="" onError={e => { e.target.style.display = "none"; }} style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
+                  ) : (
+                    <div style={{ width: 44, height: 44, borderRadius: "50%", background: COLORS.card, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", color: COLORS.grey, fontSize: "1.1rem" }}>👤</div>
+                  )}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ color: COLORS.white, fontSize: "0.9rem", fontWeight: 700, marginBottom: "0.15rem" }}>{v.name}</div>
+                    <div style={{ color: COLORS.grey, fontSize: "0.65rem", letterSpacing: "0.04em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{v.feedUrl}</div>
+                  </div>
+                  <div style={{ display: "flex", gap: "0.4rem", flexShrink: 0 }}>
+                    <button onClick={() => { setVoiceFormMode("edit"); setVoiceForm({ ...v }); }}
+                      style={{ background: "transparent", color: COLORS.grey, border: `1px solid ${COLORS.border}`, borderRadius: "3px", padding: "0.25rem 0.65rem", cursor: "pointer", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.7rem", letterSpacing: "0.05em" }}>✎ EDIT</button>
+                    <button onClick={() => deleteVoice(v.id)}
+                      style={{ background: "transparent", color: COLORS.grey, border: `1px solid ${COLORS.border}`, borderRadius: "3px", padding: "0.25rem 0.65rem", cursor: "pointer", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.7rem", letterSpacing: "0.05em" }}>✕ REMOVE</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === "articles" && heroArticle && (
         <div style={{ background: COLORS.hero, border: `2px solid ${COLORS.orange}`, borderRadius: "8px", padding: "1.25rem 1.5rem", marginBottom: "1.5rem", display: "flex", gap: "1.5rem", alignItems: "flex-start" }}>
           {heroArticle.image && <img src={heroArticle.image} alt="" onError={e => { e.target.style.display = "none"; }} style={{ width: "200px", height: "130px", objectFit: "cover", borderRadius: "6px", flexShrink: 0 }} />}
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -310,7 +453,7 @@ export default function RSSDashboard() {
         </div>
       )}
 
-      {(featured.length > 0 || heroId) && (
+      {activeTab === "articles" && (featured.length > 0 || heroId) && (
         <div style={{ background: "#1a1a1a", border: `1px solid ${COLORS.border}`, borderRadius: "6px", padding: "0.5rem 1rem", marginBottom: "1rem", fontSize: "0.8rem", color: COLORS.grey, letterSpacing: "0.05em", display: "flex", gap: "1.5rem" }}>
           {featured.length > 0 && <span>★ <span style={{ color: COLORS.white }}>{featured.length}</span> featured for HTN</span>}
           {heroId && !heroArticle && <span style={{ color: COLORS.orange }}>📌 Hero story set (scroll to find it)</span>}
@@ -318,6 +461,7 @@ export default function RSSDashboard() {
         </div>
       )}
 
+      {activeTab === "articles" && <>
       <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginBottom: "0.75rem", alignItems: "center" }}>
         {categories.map(cat => (
           <button key={cat} onClick={() => setActiveFilter(cat)} style={{ background: activeFilter === cat ? COLORS.red : "transparent", color: activeFilter === cat ? COLORS.white : COLORS.grey, border: `1px solid ${activeFilter === cat ? COLORS.red : COLORS.border}`, borderRadius: "4px", padding: "0.3rem 0.8rem", cursor: "pointer", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.8rem", letterSpacing: "0.06em" }}>
@@ -437,6 +581,8 @@ export default function RSSDashboard() {
           </div>
         </div>
       )}
+      </>}
+
     </div>
   );
 }

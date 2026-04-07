@@ -9,6 +9,7 @@ import StoryPage from "./StoryPage";
 import { AuthProvider, useAuth } from "./AuthContext";
 import AuthModal from "./AuthModal";
 import MediaKit from "./pages/MediaKit";
+import VoicesPage from "./pages/VoicesPage";
 const COLORS = {
   red: "#C8102E",
   redDark: "#A00D24",
@@ -141,14 +142,18 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
   });
 
   useEffect(() => {
-    if (sessionStorage.getItem("htn-curated-cache")) return;
+    const hasArticles = sessionStorage.getItem("htn-curated-cache");
+    const hasVoices = sessionStorage.getItem("htn-voices-cache");
+    if (hasArticles && hasVoices) return;
     fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_ID}/latest`, {
       headers: { "X-Master-Key": JSONBIN_KEY }
     })
     .then(r => r.json())
     .then(data => {
       const articles = data.record?.articles || [];
+      const voices = data.record?.voices || [];
       sessionStorage.setItem("htn-curated-cache", JSON.stringify(articles));
+      sessionStorage.setItem("htn-voices-cache", JSON.stringify(voices));
       setCurated(articles);
     })
     .catch(() => setCurated([]));
@@ -280,6 +285,7 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
                 {[{ id: "news", label: "News" }, { id: "about", label: "About" }, { id: "submit", label: "Submit Your Work" }].map(p => (
                   <button key={p.id} className={`nav-btn ${activePage === p.id ? "active" : ""}`} onClick={() => setActivePage(p.id)}>{p.label}</button>
                 ))}
+                <Link to="/voices" className="nav-btn" style={{ textDecoration: "none" }}>Voices</Link>
                 <Link to="/media-kit" className="nav-btn" style={{ textDecoration: "none" }}>Press</Link>
 
                 {user ? (
@@ -468,6 +474,11 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
                       {label}
                     </button>
                   ))}
+                  <Link to="/voices" style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: "0.78rem", letterSpacing: "0.08em", color: "#6A7A8A", textDecoration: "none", transition: "color 0.2s" }}
+                    onMouseEnter={e => e.target.style.color = COLORS.offWhite}
+                    onMouseLeave={e => e.target.style.color = "#6A7A8A"}>
+                    Voices
+                  </Link>
                   <Link to="/media-kit" style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: "0.78rem", letterSpacing: "0.08em", color: "#6A7A8A", textDecoration: "none", transition: "color 0.2s" }}
                     onMouseEnter={e => e.target.style.color = COLORS.offWhite}
                     onMouseLeave={e => e.target.style.color = "#6A7A8A"}>
@@ -574,6 +585,7 @@ export function App() {
     <Routes>
       <Route path="/" element={<HTNNews showLoader={showLoader} onLoaderComplete={() => setShowLoader(false)} />} />
       <Route path="/story/:storyId" element={<StoryPage />} />
+      <Route path="/voices" element={<VoicesPage />} />
       <Route path="/media-kit" element={<MediaKit />} />
       <Route path="/htn-command" element={
         adminAuth ? <RSSDashboard /> : (
