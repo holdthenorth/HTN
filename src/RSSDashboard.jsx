@@ -54,12 +54,22 @@ const SOURCES = [
   { id: "ccla",     name: "Canadian Civil Liberties Association", category: "On the Ground", url: "https://ccla.org/feed/" },
 ];
 
+const TZ_OFFSETS = {
+  EDT: "-0400", EST: "-0500",
+  CDT: "-0500", CST: "-0600",
+  MDT: "-0600", MST: "-0700",
+  PDT: "-0700", PST: "-0800",
+  GMT: "+0000",  UTC: "+0000",
+};
+
 function parseDate(dateStr) {
   if (!dateStr) return null;
-  let d = new Date(dateStr);
-  if (!isNaN(d)) return d;
-  const cleaned = dateStr.replace(/\s+(EST|EDT|CST|CDT|MST|MDT|PST|PDT|GMT|UTC)\s*$/, " +0000");
-  d = new Date(cleaned);
+  // Replace named timezone abbreviations with correct numeric offsets before parsing
+  const cleaned = dateStr.replace(
+    /\b(EDT|EST|CDT|CST|MDT|MST|PDT|PST|GMT|UTC)\b/,
+    (tz) => TZ_OFFSETS[tz] || "+0000"
+  );
+  const d = new Date(cleaned);
   if (!isNaN(d)) return d;
   return null;
 }

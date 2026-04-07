@@ -86,11 +86,28 @@ function HTNLogo({ height = 52 }) {
   );
 }
 
+const TZ_OFFSETS = {
+  EDT: "-0400", EST: "-0500",
+  CDT: "-0500", CST: "-0600",
+  MDT: "-0600", MST: "-0700",
+  PDT: "-0700", PST: "-0800",
+  GMT: "+0000",  UTC: "+0000",
+};
+
+function parseDate(dateStr) {
+  if (!dateStr) return null;
+  const cleaned = dateStr.replace(
+    /\b(EDT|EST|CDT|CST|MDT|MST|PDT|PST|GMT|UTC)\b/,
+    (tz) => TZ_OFFSETS[tz] || "+0000"
+  );
+  const d = new Date(cleaned);
+  return isNaN(d) ? null : d;
+}
+
 function timeAgo(dateStr) {
-  if (!dateStr) return "";
+  const d = parseDate(dateStr);
+  if (!d) return "";
   const now = new Date();
-  const d = new Date(dateStr);
-  if (isNaN(d)) return "";
   const diff = Math.floor((now - d) / (1000 * 60 * 60 * 24));
   if (diff === 0) return "Today";
   if (diff === 1) return "Yesterday";
