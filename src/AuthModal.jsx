@@ -58,7 +58,7 @@ export default function AuthModal({ onClose }) {
     >
       <div
         onClick={e => e.stopPropagation()}
-        style={{ background: COLORS.navyLight, border: `1px solid ${COLORS.border}`, borderTop: `3px solid ${COLORS.red}`, padding: "2rem 1.8rem", width: "100%", maxWidth: 360, fontFamily: "'Barlow Condensed', sans-serif" }}
+        style={{ background: COLORS.navyLight, border: `1px solid ${COLORS.border}`, borderTop: `3px solid ${COLORS.red}`, padding: "2rem 1.8rem", width: "calc(100% - 2rem)", maxWidth: 360, fontFamily: "'Barlow Condensed', sans-serif", maxHeight: "calc(100dvh - 2rem)", overflowY: "auto" }}
       >
         {/* Tabs */}
         <div style={{ display: "flex", gap: "0", marginBottom: "1.6rem", borderBottom: `1px solid ${COLORS.border}` }}>

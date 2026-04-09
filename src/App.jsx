@@ -205,7 +205,7 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
   return (
     <>
       {showLoader && <MapleLeafLoader onComplete={onLoaderComplete} />}
-      <div style={{ minHeight: "100vh", background: COLORS.navy, color: COLORS.offWhite, fontFamily: "Georgia, serif" }}>
+      <div style={{ minHeight: "100vh", background: COLORS.navy, color: COLORS.offWhite, fontFamily: "Georgia, serif", overflowX: "hidden" }}>
         <style>{`
           @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;1,8..60,400&family=Barlow+Condensed:wght@400;600;700&display=swap');
           *{box-sizing:border-box;margin:0;padding:0}
@@ -252,7 +252,11 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
           .news-row:hover{background:#1A2332}
           .news-row:last-child{border-bottom:none}
           .htn-footer-grid{display:grid;grid-template-columns:1fr 2fr 1fr;gap:3rem;align-items:start}
-          @media(max-width:768px){.htn-footer-grid{grid-template-columns:1fr;gap:2rem}}
+          @media(max-width:768px){
+            .htn-footer-grid{grid-template-columns:1fr;gap:2rem}
+            .htn-nav-links{display:none!important}
+            .htn-curator-chip{display:none!important}
+          }
         `}</style>
 
         {/* TICKER */}
@@ -267,7 +271,7 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
                 {TICKER_ITEMS[tickerPos]}
               </span>
             </div>
-            <div style={{ display: "flex", gap: "0.5rem", flexShrink: 0 }}>
+            <div className="htn-curator-chip" style={{ display: "flex", gap: "0.5rem", flexShrink: 0 }}>
               {adminMode ? (
                 <>
                   <button className="chip" style={{ color: COLORS.red, borderColor: "rgba(200,16,46,0.4)" }} onClick={() => { setShowForm(!showForm); setEditId(null); setForm({ title: "", category: "canadian-politics", url: "", date: "", source: "", note: "", imageUrl: "", featured: false }); }}>+ Add</button>
@@ -287,10 +291,12 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
               <Link to="/" style={{ textDecoration: "none" }}>
                 <img src="/htncrop.png" alt="HTN News Canada" style={{ height: "58px" }} />
               </Link>
-              <nav style={{ display: "flex", gap: "1.6rem", alignItems: "center" }}>
-                {[{ to: "/", label: "News", end: true }, { to: "/about", label: "About" }, { to: "/submit", label: "Submit Your Work" }, { to: "/voices", label: "Voices" }, { to: "/the-pitch", label: "The Pitch" }, { to: "/media-kit", label: "Press" }].map(({ to, label, end }) => (
-                  <NavLink key={to} to={to} end={end} className={({ isActive }) => `nav-btn${isActive ? " active" : ""}`} style={{ textDecoration: "none" }}>{label}</NavLink>
-                ))}
+              <nav style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+                <div className="htn-nav-links" style={{ display: "flex", gap: "1.6rem", alignItems: "center" }}>
+                  {[{ to: "/", label: "News", end: true }, { to: "/about", label: "About" }, { to: "/submit", label: "Submit Your Work" }, { to: "/voices", label: "Voices" }, { to: "/the-pitch", label: "The Pitch" }, { to: "/media-kit", label: "Press" }].map(({ to, label, end }) => (
+                    <NavLink key={to} to={to} end={end} className={({ isActive }) => `nav-btn${isActive ? " active" : ""}`} style={{ textDecoration: "none" }}>{label}</NavLink>
+                  ))}
+                </div>
 
                 {user ? (
                   <div style={{ position: "relative", zIndex: 101 }}>
