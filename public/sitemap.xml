@@ -8,6 +8,43 @@
     <priority>1.0</priority>
   </url>
 
+  <!-- Category pages -->
+  <url>
+    <loc>https://holdthenorth.news/?cat=politics</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://holdthenorth.news/?cat=world</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://holdthenorth.news/?cat=voices</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://holdthenorth.news/?cat=trump-watch</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://holdthenorth.news/?cat=the-pitch</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://holdthenorth.news/?cat=street-level</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://holdthenorth.news/?cat=on-the-ground</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+
   <!-- About -->
   <url>
     <loc>https://holdthenorth.news/about</loc>

@@ -2,7 +2,7 @@ const JSONBIN_ID = import.meta.env.VITE_JSONBIN_ID;
 const JSONBIN_KEY = import.meta.env.VITE_JSONBIN_KEY;
 
 import { useState, useEffect } from "react";
-import { Routes, Route, Link, NavLink, useLocation } from 'react-router-dom';
+import { Routes, Route, Link, NavLink, useLocation, useSearchParams } from 'react-router-dom';
 import MapleLeafLoader from "./MapleLeafLoader";
 import RSSDashboard from "./RSSDashboard";
 import StoryPage from "./StoryPage";
@@ -135,11 +135,21 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState(null);
   const [form, setForm] = useState({ title: "", category: "politics", url: "", date: "", source: "", note: "", imageUrl: "", featured: false });
-  const [activeCategory, setActiveCategory] = useState("all");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeCategory = searchParams.get("cat") || "all";
   const [toast, setToast] = useState("");
   const [tickerPos, setTickerPos] = useState(0);
   const [loaded, setLoaded] = useState(false);
   const location = useLocation();
+
+  // Keep canonical tag in sync with the current URL so each category page is indexable
+  useEffect(() => {
+    const el = document.querySelector('link[rel="canonical"]');
+    if (!el) return;
+    const base = "https://holdthenorth.news";
+    const search = location.search; // e.g. "?cat=politics" or ""
+    el.setAttribute("href", `${base}${location.pathname}${search}`);
+  }, [location]);
   const [curated, setCurated] = useState(() => {
     try { const c = sessionStorage.getItem("htn-curated-cache"); return c ? JSON.parse(c) : []; } catch { return []; }
   });
@@ -344,7 +354,7 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
               <div className={loaded ? "s2" : ""} style={{ marginTop: "0.9rem", display: "flex", gap: "0.3rem", flexWrap: "wrap", alignItems: "center" }}>
                 {CATEGORIES.map(c => (
                   <button key={c.id} className={`cat-pill ${activeCategory === c.id ? "active" : ""}`}
-                    onClick={() => setActiveCategory(c.id)}
+                    onClick={() => c.id === "all" ? setSearchParams({}) : setSearchParams({ cat: c.id })}
                     style={{ borderColor: activeCategory === c.id ? c.color : undefined, background: activeCategory === c.id ? c.color : undefined }}>
                     {c.label}
                   </button>
