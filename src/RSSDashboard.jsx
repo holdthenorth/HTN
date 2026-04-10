@@ -197,27 +197,44 @@ export default function RSSDashboard() {
       if (!db) return -1;
       return db - da;
     });
-    setArticles(results);
+    // Deduplicate by article ID (which is the link URL) — same story can appear in multiple feeds
+    const seen = new Set();
+    const deduped = results.filter(a => {
+      if (seen.has(a.id)) return false;
+      seen.add(a.id);
+      return true;
+    });
+    setArticles(deduped);
     setLoading(false);
   }
 
   function removeFeatured(id) {
-    const updated = featured.filter(x => x !== id);
-    setFeatured(updated);
-    localStorage.setItem("htn-featured", JSON.stringify(updated));
-    const updatedNotes = { ...notes };
-    delete updatedNotes[id];
-    setNotes(updatedNotes);
-    localStorage.setItem("htn-notes", JSON.stringify(updatedNotes));
+    setFeatured(prev => {
+      const updated = prev.filter(x => x !== id);
+      localStorage.setItem("htn-featured", JSON.stringify(updated));
+      return updated;
+    });
+    setNotes(prev => {
+      const updated = { ...prev };
+      delete updated[id];
+      localStorage.setItem("htn-notes", JSON.stringify(updated));
+      return updated;
+    });
   }
 
   function confirmFeature(article, note, category) {
-    const updated = [...featured, article.id];
-    setFeatured(updated);
-    localStorage.setItem("htn-featured", JSON.stringify(updated));
-    const updatedNotes = { ...notes, [article.id]: { note, category } };
-    setNotes(updatedNotes);
-    localStorage.setItem("htn-notes", JSON.stringify(updatedNotes));
+    setFeatured(prev => {
+      // Guard against double-featuring the same article
+      if (prev.includes(article.id)) return prev;
+      const updated = [...prev, article.id];
+      localStorage.setItem("htn-featured", JSON.stringify(updated));
+      return updated;
+    });
+    setNotes(prev => {
+      const updated = { ...prev, [article.id]: { note, category } };
+      localStorage.setItem("htn-notes", JSON.stringify(updated));
+      return updated;
+    });
     setNoteModal(null);
   }
 
