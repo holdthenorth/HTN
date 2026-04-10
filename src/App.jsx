@@ -13,6 +13,8 @@ import VoicesPage from "./pages/VoicesPage";
 import { ThePitchIndex, ThePitchPost } from "./pages/ThePitch";
 import AboutPage from "./pages/AboutPage";
 import SubmitPage from "./pages/SubmitPage";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
 const COLORS = {
   red: "#C8102E",
   redDark: "#A00D24",
@@ -629,6 +631,8 @@ export function App() {
       <Route path="/the-pitch" element={<ThePitchIndex />} />
       <Route path="/the-pitch/:slug" element={<ThePitchPost />} />
       <Route path="/media-kit" element={<MediaKit />} />
+      <Route path="/privacy" element={<Privacy />} />
+      <Route path="/terms" element={<Terms />} />
       <Route path="/htn-command" element={
         adminAuth ? <RSSDashboard /> : (
           <div style={{ background: "#0D1117", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
