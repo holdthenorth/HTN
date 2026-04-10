@@ -142,14 +142,38 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
   const [loaded, setLoaded] = useState(false);
   const location = useLocation();
 
-  // Keep canonical tag in sync with the current URL so each category page is indexable
+  // Keep canonical tag and page meta in sync with the current URL/category
   useEffect(() => {
-    const el = document.querySelector('link[rel="canonical"]');
-    if (!el) return;
     const base = "https://holdthenorth.news";
-    const search = location.search; // e.g. "?cat=politics" or ""
-    el.setAttribute("href", `${base}${location.pathname}${search}`);
-  }, [location]);
+    const search = location.search;
+    const canonical = document.querySelector('link[rel="canonical"]');
+    if (canonical) canonical.setAttribute("href", `${base}${location.pathname}${search}`);
+
+    // Per-category title + description so Google indexes each URL as a distinct page
+    const CATEGORY_META = {
+      all:              { title: "Hold the North — Independent Canadian News",                       desc: "Canada's independent news platform. Curated coverage on politics, civil liberties, housing, trade, and the stories that matter to everyday Canadians." },
+      politics:         { title: "Politics — Hold the North",                                        desc: "Canadian political coverage curated by HTN. Federal elections, Parliament, party leaders, and the policy decisions shaping Canada." },
+      world:            { title: "World — Hold the North",                                           desc: "International news that affects Canada. Global affairs, trade relations, and world events covered by Canada's independent news platform." },
+      voices:           { title: "Voices — Hold the North",                                          desc: "Independent Canadian journalists and writers curated by HTN. Perspectives beyond the mainstream press." },
+      "trump-watch":    { title: "Trump Watch — Hold the North",                                     desc: "Tracking US policy and political developments that directly affect Canada. HTN's ongoing coverage of cross-border tensions." },
+      "the-pitch":      { title: "The Pitch — Hold the North",                                       desc: "Original commentary and long-form analysis from the HTN editorial team on the issues defining Canada right now." },
+      "street-level":   { title: "Street Level — Hold the North",                                    desc: "Ground-level Canadian stories — housing, cost of living, community, and the issues affecting Canadians' daily lives." },
+      "on-the-ground":  { title: "On the Ground — Hold the North",                                   desc: "Civil liberties, human rights, and grassroots Canadian coverage from Amnesty International, Human Rights Watch, and the CCLA." },
+      "standing-ground":{ title: "Standing Ground — Hold the North",                                 desc: "HTN's coverage of Canadian sovereignty, Indigenous rights, and the fight to stand firm on Canadian values and institutions." },
+    };
+
+    if (location.pathname === "/") {
+      const meta = CATEGORY_META[activeCategory] || CATEGORY_META.all;
+      document.title = meta.title;
+      const setMeta = (sel, attr, val) => { const el = document.querySelector(sel); if (el) el.setAttribute(attr, val); };
+      setMeta('meta[name="description"]',    "content", meta.desc);
+      setMeta('meta[property="og:title"]',   "content", meta.title);
+      setMeta('meta[property="og:description"]', "content", meta.desc);
+      setMeta('meta[name="twitter:title"]',  "content", meta.title);
+      setMeta('meta[name="twitter:description"]', "content", meta.desc);
+      if (canonical) setMeta('meta[property="og:url"]', "content", `${base}${location.pathname}${search}`);
+    }
+  }, [location, activeCategory]);
   const [curated, setCurated] = useState(() => {
     try { const c = sessionStorage.getItem("htn-curated-cache"); return c ? JSON.parse(c) : []; } catch { return []; }
   });
