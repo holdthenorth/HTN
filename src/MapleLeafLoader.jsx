@@ -59,11 +59,11 @@ export default function MapleLeafLoader({ onComplete }) {
         transition: "all 0.6s ease",
         textAlign: "center",
       }}>
-        <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "2rem", fontWeight: 700, color: "#FFFFFF", letterSpacing: "0.15em" }}>
-          HOLD THE NORTH
+        <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "2rem", fontWeight: 700, color: "#FFFFFF", letterSpacing: "0.12em" }}>
+          REAL NEWS. REAL CANADA.
         </div>
         <div style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.85rem", color: "#C8102E", letterSpacing: "0.2em", marginTop: "0.3rem" }}>
-          STANDING GROUND
+          HOLD THE NORTH. STANDING GROUND.
         </div>
       </div>
     </div>

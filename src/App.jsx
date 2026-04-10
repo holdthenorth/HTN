@@ -143,6 +143,7 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
   const [curated, setCurated] = useState(() => {
     try { const c = sessionStorage.getItem("htn-curated-cache"); return c ? JSON.parse(c) : []; } catch { return []; }
   });
+  const [feedLoading, setFeedLoading] = useState(() => !sessionStorage.getItem("htn-curated-cache"));
 
   useEffect(() => {
     const hasArticles = sessionStorage.getItem("htn-curated-cache");
@@ -161,8 +162,9 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
       sessionStorage.setItem("htn-voices-cache", JSON.stringify(voices));
       sessionStorage.setItem("htn-pitch-cache", JSON.stringify(pitchPosts));
       setCurated(articles);
+      setFeedLoading(false);
     })
-    .catch(() => setCurated([]));
+    .catch(() => { setCurated([]); setFeedLoading(false); });
   }, []);
 
   useEffect(() => { loadItems(); setTimeout(() => setLoaded(true), 80); }, []);
@@ -251,6 +253,8 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
           .news-row{display:flex;gap:1rem;padding:1rem 0;border-bottom:1px solid #1E2A3A;text-decoration:none;transition:background 0.2s}
           .news-row:hover{background:#1A2332}
           .news-row:last-child{border-bottom:none}
+          @keyframes shimmer{0%{background-position:-600px 0}100%{background-position:600px 0}}
+          .skel{background:linear-gradient(90deg,#1A2332 25%,#222d3d 50%,#1A2332 75%);background-size:1200px 100%;animation:shimmer 1.5s ease-in-out infinite}
           .htn-footer-grid{display:grid;grid-template-columns:1fr 2fr 1fr;gap:3rem;align-items:start}
           @media(max-width:768px){
             .htn-footer-grid{grid-template-columns:1fr;gap:2rem}
@@ -388,6 +392,26 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
             });
             const visibleArticles = activeCategory === "all" ? deduped : deduped.filter(a => a.category === activeCategory);
             const catColor = CATEGORIES.find(c => c.id === activeCategory)?.color || COLORS.red;
+            if (feedLoading) return (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "1rem" }}>
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="card" style={{ borderRadius: "6px", overflow: "hidden" }}>
+                    <div className="skel" style={{ height: 200 }} />
+                    <div style={{ padding: "0.9rem", display: "flex", flexDirection: "column", gap: "0.65rem" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem" }}>
+                        <div className="skel" style={{ height: 14, width: "35%", borderRadius: 3 }} />
+                        <div className="skel" style={{ height: 14, width: "20%", borderRadius: 3 }} />
+                      </div>
+                      <div className="skel" style={{ height: 18, width: "90%", borderRadius: 3 }} />
+                      <div className="skel" style={{ height: 18, width: "70%", borderRadius: 3 }} />
+                      <div className="skel" style={{ height: 13, width: "95%", borderRadius: 3, marginTop: "0.2rem" }} />
+                      <div className="skel" style={{ height: 13, width: "80%", borderRadius: 3 }} />
+                      <div className="skel" style={{ height: 13, width: "55%", borderRadius: 3 }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
             return visibleArticles.length === 0 ? (
               <div style={{ padding: "5rem", textAlign: "center", color: COLORS.grey, fontFamily: "'Barlow Condensed',sans-serif", fontSize: "1rem", letterSpacing: "0.08em" }}>
                 {curated.length === 0 ? "No stories yet — check back soon." : "No stories in this category yet."}
