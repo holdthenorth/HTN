@@ -563,6 +563,20 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
                   </div>
                 </a>
 
+                {/* Substack */}
+                <a href="https://holdthenorth.substack.com" target="_blank" rel="noopener noreferrer"
+                  style={{ display: "flex", alignItems: "center", gap: "0.65rem", textDecoration: "none", color: "#6A7A8A", transition: "color 0.2s" }}
+                  onMouseEnter={e => { e.currentTarget.style.color = COLORS.offWhite; }}
+                  onMouseLeave={e => { e.currentTarget.style.color = "#6A7A8A"; }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
+                    <path d="M22.539 8.242H1.46V5.406h21.08v2.836zM1.46 10.812V24L12 18.11 22.54 24V10.812H1.46zM22.54 0H1.46v2.836h21.08V0z"/>
+                  </svg>
+                  <div>
+                    <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: "0.78rem", letterSpacing: "0.08em", fontWeight: 700 }}>Substack</div>
+                    <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: "0.65rem", letterSpacing: "0.06em", opacity: 0.6 }}>holdthenorth.substack.com</div>
+                  </div>
+                </a>
+
                 {/* TikTok — coming soon */}
                 <div style={{ display: "flex", alignItems: "center", gap: "0.65rem", color: "#3A4A5A", cursor: "default" }}>
                   <svg width="14" height="16" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" style={{ flexShrink: 0 }}>
