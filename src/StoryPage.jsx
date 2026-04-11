@@ -82,6 +82,59 @@ export default function StoryPage() {
 
   const articleUrl = article?.link || decodeURIComponent(storyId);
 
+  // Update OG / Twitter meta tags when the article is available
+  useEffect(() => {
+    if (!article) return;
+
+    const canonicalUrl = `https://holdthenorth.news/story/${encodeURIComponent(article.id)}`;
+    const desc = stripHtml(article.description || "");
+
+    const prev = {
+      title:        document.title,
+      description:  document.querySelector('meta[name="description"]')?.getAttribute("content") || "",
+      ogTitle:      document.querySelector('meta[property="og:title"]')?.getAttribute("content") || "",
+      ogDesc:       document.querySelector('meta[property="og:description"]')?.getAttribute("content") || "",
+      ogImage:      document.querySelector('meta[property="og:image"]')?.getAttribute("content") || "",
+      ogUrl:        document.querySelector('meta[property="og:url"]')?.getAttribute("content") || "",
+      twTitle:      document.querySelector('meta[name="twitter:title"]')?.getAttribute("content") || "",
+      twDesc:       document.querySelector('meta[name="twitter:description"]')?.getAttribute("content") || "",
+      twImage:      document.querySelector('meta[name="twitter:image"]')?.getAttribute("content") || "",
+      twCard:       document.querySelector('meta[name="twitter:card"]')?.getAttribute("content") || "",
+    };
+
+    const set = (sel, attr, val) => { const el = document.querySelector(sel); if (el) el.setAttribute(attr, val); };
+
+    document.title = `${article.title} — Hold the North`;
+    set('meta[name="description"]',          "content", desc);
+    set('meta[property="og:title"]',         "content", article.title);
+    set('meta[property="og:description"]',   "content", desc);
+    set('meta[property="og:url"]',           "content", canonicalUrl);
+    set('meta[name="twitter:title"]',        "content", article.title);
+    set('meta[name="twitter:description"]',  "content", desc);
+    set('meta[name="twitter:card"]',         "content", "summary_large_image");
+    if (article.image) {
+      set('meta[property="og:image"]',       "content", article.image);
+      set('meta[name="twitter:image"]',      "content", article.image);
+    }
+
+    const canonical = document.querySelector('link[rel="canonical"]');
+    if (canonical) canonical.setAttribute("href", canonicalUrl);
+
+    return () => {
+      document.title = prev.title;
+      set('meta[name="description"]',          "content", prev.description);
+      set('meta[property="og:title"]',         "content", prev.ogTitle);
+      set('meta[property="og:description"]',   "content", prev.ogDesc);
+      set('meta[property="og:image"]',         "content", prev.ogImage);
+      set('meta[property="og:url"]',           "content", prev.ogUrl);
+      set('meta[name="twitter:title"]',        "content", prev.twTitle);
+      set('meta[name="twitter:description"]',  "content", prev.twDesc);
+      set('meta[name="twitter:image"]',        "content", prev.twImage);
+      set('meta[name="twitter:card"]',         "content", prev.twCard);
+      if (canonical) canonical.setAttribute("href", "https://holdthenorth.news/");
+    };
+  }, [article]);
+
   useEffect(() => {
     if (!articleUrl) return;
     setCommentsLoading(true);
