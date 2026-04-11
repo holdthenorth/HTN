@@ -206,7 +206,7 @@ export default function StoryPage() {
 
             {/* SHARE */}
             {(() => {
-              const su = `https://holdthenorth.news/story/${storyId}`;
+              const su = window.location.href;
               const t  = encodeURIComponent(article.title);
               const u  = encodeURIComponent(su);
               const btns = [

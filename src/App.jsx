@@ -470,7 +470,7 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
                           {/* Share buttons — stopPropagation prevents the parent <Link> from navigating */}
                           <div style={{ display: "flex", gap: "0.3rem" }} onClick={e => e.stopPropagation()}>
                             {(() => {
-                              const su = `https://holdthenorth.news/story/${encodeURIComponent(article.id)}`;
+                              const su = `${window.location.origin}/story/${encodeURIComponent(article.id)}`;
                               const t  = encodeURIComponent(article.title);
                               const u  = encodeURIComponent(su);
                               return [
