@@ -492,12 +492,13 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
                           {/* Share buttons — stopPropagation prevents the parent <Link> from navigating */}
                           <div style={{ display: "flex", gap: "0.3rem" }} onClick={e => e.stopPropagation()}>
                             {(() => {
-                              const su = `${window.location.origin}/story/${encodeURIComponent(article.id)}`;
-                              const t  = encodeURIComponent(article.title);
-                              const u  = encodeURIComponent(article.link || su);
+                              const su  = `${window.location.origin}/story/${encodeURIComponent(article.id)}`;
+                              const esu = encodeURIComponent(su);
+                              const t   = encodeURIComponent(article.title);
+                              const u   = encodeURIComponent(article.link || su);
                               return [
                                 { label: "Bluesky",  color: "#0085ff", href: `https://bsky.app/intent/compose?text=${encodeURIComponent(article.title + " " + (article.link || su))}`,                   icon: <svg width="11" height="10" viewBox="0 0 360 320" fill="currentColor"><path d="M180 141.964C163.68 112.519 126.639 51.985 89.882 32.116 68.232 20.247 39.327 16.427 21.517 34.483 2.644 53.617 5.496 82.438 18.447 100.58c8.89 12.37 23.49 18.927 38.14 21.085-15.247 2.607-33.665 11.497-39.673 50.504-8.008 51.51 43.396 65.798 78.34 46.394C135.04 199.33 163.054 167.99 180 141.964z"/><path d="M180 141.964C196.32 112.519 233.361 51.985 270.118 32.116c21.65-11.869 50.555-15.689 68.365 2.367 18.873 19.134 16.021 47.955 3.07 66.097-8.89 12.37-23.49 18.927-38.14 21.085 15.247 2.607 33.665 11.497 39.673 50.504 8.008 51.51-43.396 65.798-78.34 46.394C224.96 199.33 196.946 167.99 180 141.964z"/></svg> },
-                                { label: "Facebook", color: "#1877f2", href: `https://www.facebook.com/sharer/sharer.php?u=${u}`,                                                     icon: <svg width="9"  height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg> },
+                                { label: "Facebook", color: "#1877f2", href: `https://www.facebook.com/sharer/sharer.php?u=${esu}`,                                                    icon: <svg width="9"  height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg> },
                                 { label: "X",        color: "#e8e8e8", href: `https://twitter.com/intent/tweet?text=${t}&url=${u}`,                                                   icon: <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg> },
                               ].map(({ label, color, href, icon }) => (
                                 <button key={label}
