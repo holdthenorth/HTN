@@ -141,6 +141,7 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
   const activeCategory = searchParams.get("cat") || "all";
   const [pwaPrompt, setPwaPrompt] = useState(null);
   const [pwaVisible, setPwaVisible] = useState(false);
+  const [iosVisible, setIosVisible] = useState(false);
   const [toast, setToast] = useState("");
   const [tickerPos, setTickerPos] = useState(0);
   const [loaded, setLoaded] = useState(false);
@@ -212,6 +213,18 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
     const handler = e => { e.preventDefault(); setPwaPrompt(e); setPwaVisible(true); };
     window.addEventListener("beforeinstallprompt", handler);
     return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
+  useEffect(() => {
+    const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const isInStandaloneMode = window.navigator.standalone === true;
+    if (!isIos || isInStandaloneMode) return;
+    const dismissed = localStorage.getItem("htn-ios-prompt-dismissed");
+    if (dismissed) {
+      const daysSince = (Date.now() - Number(dismissed)) / 86400000;
+      if (daysSince < 3) return;
+    }
+    setIosVisible(true);
   }, []);
 
   async function loadItems() {
@@ -696,6 +709,48 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
           >
             ✕
           </button>
+        </div>
+      )}
+
+      {iosVisible && (
+        <div style={{
+          position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 9999,
+          background: "#131920", borderTop: `2px solid ${COLORS.red}`,
+          padding: "0.9rem 1.2rem 1.2rem",
+          animation: "pwaSlideUp 0.35s ease forwards",
+          fontFamily: "'Barlow Condensed', sans-serif",
+        }}>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
+            <img src="/htnleafgooglenews.png" alt="HTN" style={{ height: 28, flexShrink: 0, marginTop: 2 }} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: "0.95rem", letterSpacing: "0.03em", color: COLORS.offWhite, lineHeight: 1.4 }}>
+                Install the HTN app — tap the share icon{" "}
+                <span style={{ display: "inline-block", fontSize: "1rem" }}>⬆</span>
+                {" "}then <strong style={{ color: COLORS.offWhite }}>Add to Home Screen</strong>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                localStorage.setItem("htn-ios-prompt-dismissed", String(Date.now()));
+                setIosVisible(false);
+              }}
+              aria-label="Dismiss"
+              style={{
+                background: "none", border: "none", color: COLORS.grey,
+                cursor: "pointer", padding: "0.2rem 0.3rem", fontSize: "1.1rem",
+                lineHeight: 1, flexShrink: 0,
+              }}
+            >
+              ✕
+            </button>
+          </div>
+          {/* Arrow pointing down toward the Safari share button */}
+          <div style={{
+            display: "flex", justifyContent: "center", marginTop: "0.55rem",
+            fontSize: "1.3rem", color: COLORS.red, lineHeight: 1,
+          }}>
+            ▼
+          </div>
         </div>
       )}
     </>
