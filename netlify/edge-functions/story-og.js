@@ -54,9 +54,17 @@ function esc(str) {
     .replace(/>/g, "&gt;");
 }
 
-/** Replace the content="..." of a specific meta tag in HTML text. */
-function replaceMeta(html, selector, value) {
-  return html.replace(selector, (_, pre, post) => `${pre}${esc(value)}${post}`);
+/**
+ * Ensure an image URL is absolute and uses https://.
+ * Protocol-relative URLs (//cdn.example.com/...) and relative paths
+ * are not accepted by Bluesky / X card validators.
+ */
+function absoluteImage(url) {
+  if (!url || typeof url !== "string") return FALLBACK_IMAGE;
+  if (url.startsWith("https://")) return url;
+  if (url.startsWith("http://"))  return url.replace("http://", "https://");
+  if (url.startsWith("//"))       return `https:${url}`;
+  return FALLBACK_IMAGE; // relative or data URLs — use site fallback
 }
 
 // ---------------------------------------------------------------------------
@@ -110,7 +118,7 @@ export default async function handler(request, context) {
   const canonicalUrl = `${SITE_URL}/story/${storyId}`;
   const title        = article.title || "Hold the North";
   const desc         = stripHtml(article.description || "").slice(0, 300);
-  const image        = article.image || FALLBACK_IMAGE;
+  const image        = absoluteImage(article.image); // guaranteed https:// absolute URL
 
   // Replace <title>
   html = html.replace(
@@ -118,24 +126,36 @@ export default async function handler(request, context) {
     `$1${esc(title)} — Hold the North$2`
   );
 
-  // Replace Open Graph tags
-  html = replaceMeta(html, /(<meta\s+property="og:title"\s+content=")[^"]*(")/g,       title);
-  html = replaceMeta(html, /(<meta\s+property="og:description"\s+content=")[^"]*(")/g, desc);
-  html = replaceMeta(html, /(<meta\s+property="og:image"\s+content=")[^"]*(")/g,       image);
-  html = replaceMeta(html, /(<meta\s+property="og:url"\s+content=")[^"]*(")/g,         canonicalUrl);
-  html = replaceMeta(html, /(<meta\s+property="og:type"\s+content=")[^"]*(")/g,        "article");
-
-  // Replace Twitter / X Card tags
-  html = replaceMeta(html, /(<meta\s+name="twitter:title"\s+content=")[^"]*(")/g,       title);
-  html = replaceMeta(html, /(<meta\s+name="twitter:description"\s+content=")[^"]*(")/g, desc);
-  html = replaceMeta(html, /(<meta\s+name="twitter:image"\s+content=")[^"]*(")/g,       image);
-  html = replaceMeta(html, /(<meta\s+name="twitter:card"\s+content=")[^"]*(")/g,        "summary_large_image");
-
   // Replace canonical link href
   html = html.replace(
     /(<link\s+rel="canonical"\s+href=")[^"]*(")/,
     `$1${esc(canonicalUrl)}$2`
   );
+
+  // Remove ALL existing og: and twitter: meta tags — then reinject a clean set.
+  // This is more reliable than per-tag regex replacement: no risk of attribute-order
+  // mismatches, leftover stale values, or og:image:width / og:image:height confusion.
+  html = html.replace(/<meta\s+property="og:[^>]*>/g, "");
+  html = html.replace(/<meta\s+name="twitter:[^>]*>/g, "");
+
+  const ogBlock = [
+    `<meta property="og:type"        content="article">`,
+    `<meta property="og:site_name"   content="Hold the North">`,
+    `<meta property="og:locale"      content="en_CA">`,
+    `<meta property="og:title"       content="${esc(title)}">`,
+    `<meta property="og:description" content="${esc(desc)}">`,
+    `<meta property="og:image"       content="${esc(image)}">`,
+    `<meta property="og:image:width" content="1200">`,
+    `<meta property="og:image:height" content="630">`,
+    `<meta property="og:url"         content="${esc(canonicalUrl)}">`,
+    `<meta name="twitter:card"        content="summary_large_image">`,
+    `<meta name="twitter:site"        content="@holdthenorth">`,
+    `<meta name="twitter:title"       content="${esc(title)}">`,
+    `<meta name="twitter:description" content="${esc(desc)}">`,
+    `<meta name="twitter:image"       content="${esc(image)}">`,
+  ].join("\n    ");
+
+  html = html.replace("</head>", `    ${ogBlock}\n  </head>`);
 
   // Pass through original status + headers, update content-type
   const headers = new Headers(spaResponse.headers);
