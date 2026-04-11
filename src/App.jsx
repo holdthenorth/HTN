@@ -139,6 +139,8 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
   const [form, setForm] = useState({ title: "", category: "politics", url: "", date: "", source: "", note: "", imageUrl: "", featured: false });
   const [searchParams, setSearchParams] = useSearchParams();
   const activeCategory = searchParams.get("cat") || "all";
+  const [pwaPrompt, setPwaPrompt] = useState(null);
+  const [pwaVisible, setPwaVisible] = useState(false);
   const [toast, setToast] = useState("");
   const [tickerPos, setTickerPos] = useState(0);
   const [loaded, setLoaded] = useState(false);
@@ -206,6 +208,12 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
   useEffect(() => { loadItems(); setTimeout(() => setLoaded(true), 80); }, []);
   useEffect(() => { const t = setInterval(() => setTickerPos(p => (p + 1) % TICKER_ITEMS.length), 4000); return () => clearInterval(t); }, []);
 
+  useEffect(() => {
+    const handler = e => { e.preventDefault(); setPwaPrompt(e); setPwaVisible(true); };
+    window.addEventListener("beforeinstallprompt", handler);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
   async function loadItems() {
     try {
       const r = await window.storage.get("htn-v4-items", true);
@@ -250,6 +258,7 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
           @keyframes htnFade{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
           @keyframes tickFade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
           @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.25}}
+          @keyframes pwaSlideUp{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
           .htn-fade{animation:htnFade 0.65s ease forwards}
           .s1{opacity:0;animation:htnFade 0.6s ease 0.1s forwards}
           .s2{opacity:0;animation:htnFade 0.6s ease 0.2s forwards}
@@ -645,6 +654,50 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
         {showUserMenu && <div onClick={() => setShowUserMenu(false)} style={{ position: "fixed", inset: 0, zIndex: 99 }} />}
         {toast && <div className="toast">{toast}</div>}
       </div>
+
+      {pwaVisible && (
+        <div style={{
+          position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 9999,
+          background: "#131920", borderTop: `2px solid ${COLORS.red}`,
+          display: "flex", alignItems: "center", gap: "0.75rem",
+          padding: "0.85rem 1.2rem",
+          animation: "pwaSlideUp 0.35s ease forwards",
+          fontFamily: "'Barlow Condensed', sans-serif",
+        }}>
+          <img src="/htnleafgooglenews.png" alt="HTN" style={{ height: 28, flexShrink: 0 }} />
+          <span style={{ flex: 1, fontSize: "0.95rem", letterSpacing: "0.03em", color: COLORS.offWhite }}>
+            Install the HTN app for faster access
+          </span>
+          <button
+            onClick={async () => {
+              if (!pwaPrompt) return;
+              await pwaPrompt.prompt();
+              setPwaVisible(false);
+              setPwaPrompt(null);
+            }}
+            style={{
+              background: COLORS.red, color: "#fff", border: "none",
+              borderRadius: "3px", padding: "0.4rem 1rem",
+              fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700,
+              fontSize: "0.85rem", letterSpacing: "0.1em", textTransform: "uppercase",
+              cursor: "pointer", flexShrink: 0,
+            }}
+          >
+            Install
+          </button>
+          <button
+            onClick={() => setPwaVisible(false)}
+            aria-label="Dismiss"
+            style={{
+              background: "none", border: "none", color: COLORS.grey,
+              cursor: "pointer", padding: "0.2rem 0.3rem", fontSize: "1.1rem",
+              lineHeight: 1, flexShrink: 0,
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
     </>
   );
 }
