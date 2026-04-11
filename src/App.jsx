@@ -154,6 +154,7 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
   const [pwaPrompt, setPwaPrompt] = useState(null);
   const [pwaVisible, setPwaVisible] = useState(false);
   const [iosVisible, setIosVisible] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [toast, setToast] = useState("");
   const [tickerPos, setTickerPos] = useState(0);
   const [loaded, setLoaded] = useState(false);
@@ -284,6 +285,13 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
           @keyframes tickFade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
           @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.25}}
           @keyframes pwaSlideUp{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
+          @keyframes menuSlideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
+          @keyframes menuFadeIn{from{opacity:0}to{opacity:1}}
+          .htn-hamburger{display:none;background:none;border:none;cursor:pointer;padding:0.4rem;color:#B8BCC4;line-height:0;flex-shrink:0}
+          .htn-hamburger:hover{color:#fff}
+          .htn-menu-link{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1.25rem;letter-spacing:0.1em;text-transform:uppercase;color:#8A8F98;padding:1rem 0;border-bottom:1px solid #1E2A3A;display:block;text-decoration:none;transition:color 0.18s}
+          .htn-menu-link:hover{color:#F0EDE8}
+          .htn-menu-link.active{color:#C8102E}
           .htn-fade{animation:htnFade 0.65s ease forwards}
           .s1{opacity:0;animation:htnFade 0.6s ease 0.1s forwards}
           .s2{opacity:0;animation:htnFade 0.6s ease 0.2s forwards}
@@ -330,6 +338,7 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
             .htn-footer-grid{grid-template-columns:1fr;gap:2rem}
             .htn-nav-links{display:none!important}
             .htn-curator-chip{display:none!important}
+            .htn-hamburger{display:flex!important}
           }
         `}</style>
 
@@ -408,6 +417,19 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
                     Sign In
                   </button>
                 )}
+
+                {/* Hamburger — only visible on mobile via CSS */}
+                <button
+                  className="htn-hamburger"
+                  onClick={() => setMenuOpen(true)}
+                  aria-label="Open navigation menu"
+                >
+                  <svg width="22" height="16" viewBox="0 0 22 16" fill="none">
+                    <rect y="0"  width="22" height="2" rx="1" fill="currentColor"/>
+                    <rect y="7"  width="22" height="2" rx="1" fill="currentColor"/>
+                    <rect y="14" width="22" height="2" rx="1" fill="currentColor"/>
+                  </svg>
+                </button>
               </nav>
             </div>
             {location.pathname === "/" && (
@@ -681,6 +703,75 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
         {showUserMenu && <div onClick={() => setShowUserMenu(false)} style={{ position: "fixed", inset: 0, zIndex: 99 }} />}
         {toast && <div className="toast">{toast}</div>}
       </div>
+
+      {/* MOBILE MENU */}
+      {menuOpen && (
+        <div
+          onClick={() => setMenuOpen(false)}
+          style={{ position: "fixed", inset: 0, zIndex: 8000, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(3px)", animation: "menuFadeIn 0.2s ease" }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: "min(300px, 82vw)", background: COLORS.navy, borderLeft: `3px solid ${COLORS.red}`, display: "flex", flexDirection: "column", animation: "menuSlideIn 0.28s ease" }}
+          >
+            {/* Menu header */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.9rem 1.2rem", borderBottom: `1px solid ${COLORS.border}` }}>
+              <img src="/htncrop.png" alt="HTN" style={{ height: 28 }} />
+              <button
+                onClick={() => setMenuOpen(false)}
+                aria-label="Close menu"
+                style={{ background: "none", border: "none", color: COLORS.grey, cursor: "pointer", fontSize: "1.3rem", lineHeight: 1, padding: "0.25rem 0.3rem" }}
+              >✕</button>
+            </div>
+
+            {/* Nav links */}
+            <nav style={{ flex: 1, overflowY: "auto", padding: "0.5rem 1.2rem 2rem" }}>
+              {[
+                { to: "/",          label: "News",             end: true },
+                { to: "/about",     label: "About" },
+                { to: "/submit",    label: "Submit Your Work" },
+                { to: "/voices",    label: "Voices" },
+                { to: "/the-pitch", label: "The Pitch" },
+                { to: "/media-kit", label: "Press" },
+              ].map(({ to, label, end }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  end={end}
+                  onClick={() => setMenuOpen(false)}
+                  className={({ isActive }) => `htn-menu-link${isActive ? " active" : ""}`}
+                >
+                  {label}
+                </NavLink>
+              ))}
+            </nav>
+
+            {/* Sign-in row at bottom */}
+            <div style={{ padding: "1rem 1.2rem", borderTop: `1px solid ${COLORS.border}` }}>
+              {user ? (
+                <button
+                  onClick={() => { signOut(); setMenuOpen(false); }}
+                  style={{ width: "100%", background: "none", border: `1px solid ${COLORS.border}`, color: COLORS.grey, padding: "0.65rem 1rem", fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, fontSize: "0.78rem", letterSpacing: "0.12em", textTransform: "uppercase", cursor: "pointer", transition: "all 0.2s" }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = COLORS.grey; e.currentTarget.style.color = COLORS.offWhite; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = COLORS.border; e.currentTarget.style.color = COLORS.grey; }}
+                >
+                  Sign Out
+                </button>
+              ) : (
+                <button
+                  onClick={() => { setShowAuthModal(true); setMenuOpen(false); }}
+                  style={{ width: "100%", background: COLORS.red, border: "none", color: "#fff", padding: "0.75rem 1rem", fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, fontSize: "0.78rem", letterSpacing: "0.14em", textTransform: "uppercase", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", transition: "background 0.2s" }}
+                  onMouseEnter={e => e.currentTarget.style.background = COLORS.redDark}
+                  onMouseLeave={e => e.currentTarget.style.background = COLORS.red}
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                  Sign In
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {pwaVisible && (
         <div style={{
