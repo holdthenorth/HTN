@@ -34,14 +34,41 @@ function stripHtml(str) {
   return str ? str.replace(/<[^>]*>/g, "") : "";
 }
 
-// Must match the same function in App.jsx — derives a short 7-char base-36 slug from a source URL
+// Must match storySlug in App.jsx exactly
 function storySlug(url) {
-  let h = 5381;
-  for (let i = 0; i < url.length; i++) {
-    h = ((h << 5) + h) ^ url.charCodeAt(i);
-    h = h >>> 0;
+  if (!url || typeof url !== "string") return "";
+  try {
+    return btoa(url).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+  } catch {
+    return btoa(encodeURIComponent(url)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
   }
-  return h.toString(36).padStart(7, "0");
+}
+
+// Decode a storySlug back to the original source URL
+function decodeStorySlug(slug) {
+  if (!slug) return "";
+  try {
+    const b64 = slug.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = b64 + "=".repeat((4 - b64.length % 4) % 4);
+    const decoded = atob(padded);
+    // If it was percent-encoded before base64, decode that layer too
+    return decoded.startsWith("http") ? decoded : decodeURIComponent(decoded);
+  } catch {
+    // Fallback: treat as old-style encodeURIComponent slug
+    try { return decodeURIComponent(slug); } catch { return ""; }
+  }
+}
+
+// Find an article from a list by storyId — decodes slug to source URL and matches exactly
+function findBySlug(arts, storyId) {
+  if (!arts?.length || !storyId) return null;
+  const sourceUrl = decodeStorySlug(storyId);
+  if (sourceUrl) {
+    const norm = u => (u || "").replace(/\/$/, "").toLowerCase();
+    const target = norm(sourceUrl);
+    return arts.find(a => norm(a.id) === target || norm(a.link) === target) || null;
+  }
+  return null;
 }
 
 function timeAgoFull(dateStr) {
@@ -64,10 +91,7 @@ export default function StoryPage() {
     try {
       const c = sessionStorage.getItem("htn-curated-cache");
       if (!c) return null;
-      const arts = JSON.parse(c);
-      return arts.find(a => storySlug(a.id) === storyId)
-          || arts.find(a => storySlug(a.link) === storyId)
-          || null;
+      return findBySlug(JSON.parse(c), storyId);
     } catch { return null; }
   });
 
@@ -76,10 +100,7 @@ export default function StoryPage() {
     try {
       const c = sessionStorage.getItem("htn-curated-cache");
       if (!c) return true;
-      const arts = JSON.parse(c);
-      const found = arts.find(a => storySlug(a.id) === storyId)
-                 || arts.find(a => storySlug(a.link) === storyId);
-      return !found;
+      return !findBySlug(JSON.parse(c), storyId);
     } catch { return true; }
   });
 
@@ -100,9 +121,7 @@ export default function StoryPage() {
       .then(data => {
         const arts = data.record?.articles || [];
         sessionStorage.setItem("htn-curated-cache", JSON.stringify(arts));
-        const found = arts.find(a => storySlug(a.id) === storyId)
-                   || arts.find(a => storySlug(a.link) === storyId);
-        setArticle(found || null);
+        setArticle(findBySlug(arts, storyId) || null);
         setLoading(false);
       })
       .catch(() => setLoading(false));

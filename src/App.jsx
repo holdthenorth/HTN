@@ -125,14 +125,16 @@ function timeAgo(dateStr) {
 function isYT(url) { return url && (url.includes("youtube.com") || url.includes("youtu.be")); }
 function stripHtml(str) { return str ? str.replace(/<[^>]*>/g, "") : ""; }
 
-// Deterministic short ID derived from the source URL — produces a clean 7-char base-36 slug
+// Encode a source URL into a URL-safe base64 slug for use in /story/ paths.
+// Reversible — StoryPage decodes it back to the original URL for lookup.
 function storySlug(url) {
-  let h = 5381;
-  for (let i = 0; i < url.length; i++) {
-    h = ((h << 5) + h) ^ url.charCodeAt(i);
-    h = h >>> 0;
+  if (!url || typeof url !== "string") return "";
+  try {
+    return btoa(url).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+  } catch {
+    // btoa fails on non-Latin1 chars; percent-encode first then base64
+    return btoa(encodeURIComponent(url)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
   }
-  return h.toString(36).padStart(7, "0");
 }
 
 export default function HTNNews({ showLoader, onLoaderComplete }) {
