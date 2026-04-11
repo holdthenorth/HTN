@@ -1,0 +1,151 @@
+/**
+ * Netlify Edge Function — /story/:id OG tag injector
+ *
+ * Intercepts requests to story pages, fetches the article from JSONBin,
+ * and injects per-article Open Graph + Twitter Card meta tags into the HTML
+ * before it reaches the browser (or crawler). Runs on Deno.
+ *
+ * Environment variables required (set in Netlify dashboard):
+ *   VITE_JSONBIN_ID  — JSONBin bin ID
+ *   VITE_JSONBIN_KEY — JSONBin master key
+ */
+
+const SITE_URL       = "https://holdthenorth.news";
+const FALLBACK_IMAGE = `${SITE_URL}/htnleafgooglenews.png`;
+const JSONBIN_TIMEOUT_MS = 4000;
+
+// ---------------------------------------------------------------------------
+// Helpers (must match logic in App.jsx / StoryPage.jsx)
+// ---------------------------------------------------------------------------
+
+/** Decode URL-safe base64 storyId back to the original source URL. */
+function decodeStorySlug(slug) {
+  if (!slug) return "";
+  try {
+    const b64    = slug.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = b64 + "=".repeat((4 - b64.length % 4) % 4);
+    const decoded = atob(padded);
+    // If it was percent-encoded before base64 (non-Latin1 fallback), decode again
+    return decoded.startsWith("http") ? decoded : decodeURIComponent(decoded);
+  } catch {
+    try { return decodeURIComponent(slug); } catch { return ""; }
+  }
+}
+
+/** Find an article in the list by matching the decoded source URL. */
+function findArticle(articles, sourceUrl) {
+  if (!sourceUrl || !articles?.length) return null;
+  const norm   = u => (u || "").replace(/\/$/, "").toLowerCase();
+  const target = norm(sourceUrl);
+  return articles.find(a => norm(a.id) === target || norm(a.link) === target) || null;
+}
+
+/** Strip HTML tags and collapse whitespace. */
+function stripHtml(str) {
+  return (str || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+/** Escape a value for safe use inside an HTML attribute. */
+function esc(str) {
+  return (str || "")
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+/** Replace the content="..." of a specific meta tag in HTML text. */
+function replaceMeta(html, selector, value) {
+  return html.replace(selector, (_, pre, post) => `${pre}${esc(value)}${post}`);
+}
+
+// ---------------------------------------------------------------------------
+// Edge function handler
+// ---------------------------------------------------------------------------
+
+export default async function handler(request, context) {
+  const url     = new URL(request.url);
+  const parts   = url.pathname.split("/").filter(Boolean); // ["story", "<id>"]
+  const storyId = parts[1];
+
+  if (!storyId) return context.next();
+
+  // Decode the URL-safe base64 slug to the original source URL
+  const sourceUrl = decodeStorySlug(storyId);
+  if (!sourceUrl || !sourceUrl.startsWith("http")) return context.next();
+
+  // Read env vars (available in Netlify edge functions via Deno.env)
+  const JSONBIN_ID  = Deno.env.get("VITE_JSONBIN_ID");
+  const JSONBIN_KEY = Deno.env.get("VITE_JSONBIN_KEY");
+  if (!JSONBIN_ID || !JSONBIN_KEY) return context.next();
+
+  // Fetch article list from JSONBin with a hard timeout
+  let article = null;
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), JSONBIN_TIMEOUT_MS);
+    const res = await fetch(
+      `https://api.jsonbin.io/v3/b/${JSONBIN_ID}/latest`,
+      { headers: { "X-Master-Key": JSONBIN_KEY }, signal: controller.signal }
+    );
+    clearTimeout(timer);
+
+    if (res.ok) {
+      const data = await res.json();
+      article = findArticle(data.record?.articles || [], sourceUrl);
+    }
+  } catch {
+    // JSONBin unreachable or timed out — serve the plain SPA page
+    return context.next();
+  }
+
+  // No matching article — serve the normal SPA page
+  if (!article) return context.next();
+
+  // Fetch the SPA index.html (what Netlify would normally serve for this route)
+  const spaResponse = await context.next();
+  let html = await spaResponse.text();
+
+  // Build per-article values
+  const canonicalUrl = `${SITE_URL}/story/${storyId}`;
+  const title        = article.title || "Hold the North";
+  const desc         = stripHtml(article.description || "").slice(0, 300);
+  const image        = article.image || FALLBACK_IMAGE;
+
+  // Replace <title>
+  html = html.replace(
+    /(<title>)[^<]*(<\/title>)/,
+    `$1${esc(title)} — Hold the North$2`
+  );
+
+  // Replace Open Graph tags
+  html = replaceMeta(html, /(<meta\s+property="og:title"\s+content=")[^"]*(")/g,       title);
+  html = replaceMeta(html, /(<meta\s+property="og:description"\s+content=")[^"]*(")/g, desc);
+  html = replaceMeta(html, /(<meta\s+property="og:image"\s+content=")[^"]*(")/g,       image);
+  html = replaceMeta(html, /(<meta\s+property="og:url"\s+content=")[^"]*(")/g,         canonicalUrl);
+  html = replaceMeta(html, /(<meta\s+property="og:type"\s+content=")[^"]*(")/g,        "article");
+
+  // Replace Twitter / X Card tags
+  html = replaceMeta(html, /(<meta\s+name="twitter:title"\s+content=")[^"]*(")/g,       title);
+  html = replaceMeta(html, /(<meta\s+name="twitter:description"\s+content=")[^"]*(")/g, desc);
+  html = replaceMeta(html, /(<meta\s+name="twitter:image"\s+content=")[^"]*(")/g,       image);
+  html = replaceMeta(html, /(<meta\s+name="twitter:card"\s+content=")[^"]*(")/g,        "summary_large_image");
+
+  // Replace canonical link href
+  html = html.replace(
+    /(<link\s+rel="canonical"\s+href=")[^"]*(")/,
+    `$1${esc(canonicalUrl)}$2`
+  );
+
+  // Pass through original status + headers, update content-type
+  const headers = new Headers(spaResponse.headers);
+  headers.set("content-type", "text/html; charset=utf-8");
+
+  return new Response(html, {
+    status: spaResponse.status,
+    headers,
+  });
+}
+
+/** Declare which paths this edge function handles. */
+export const config = { path: "/story/*" };
