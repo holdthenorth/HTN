@@ -339,6 +339,7 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
             .htn-nav-links{display:none!important}
             .htn-curator-chip{display:none!important}
             .htn-hamburger{display:flex!important}
+            .htn-cat-pills{display:none!important}
           }
         `}</style>
 
@@ -433,7 +434,7 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
               </nav>
             </div>
             {location.pathname === "/" && (
-              <div className={loaded ? "s2" : ""} style={{ marginTop: "0.9rem", display: "flex", gap: "0.3rem", flexWrap: "wrap", alignItems: "center" }}>
+              <div className={`htn-cat-pills${loaded ? " s2" : ""}`} style={{ marginTop: "0.9rem", display: "flex", gap: "0.3rem", flexWrap: "wrap", alignItems: "center" }}>
                 {CATEGORIES.map(c => (
                   <button key={c.id} className={`cat-pill ${activeCategory === c.id ? "active" : ""}`}
                     onClick={() => c.id === "all" ? setSearchParams({}) : setSearchParams({ cat: c.id })}
@@ -745,6 +746,39 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
                 </NavLink>
               ))}
             </nav>
+
+            {/* Categories section */}
+            <div style={{ padding: "0.75rem 1.2rem 1rem", borderTop: `1px solid ${COLORS.border}` }}>
+              <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, fontSize: "0.62rem", letterSpacing: "0.18em", color: COLORS.red, textTransform: "uppercase", marginBottom: "0.65rem" }}>Categories</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.1rem" }}>
+                {CATEGORIES.map(c => (
+                  <button
+                    key={c.id}
+                    onClick={() => {
+                      c.id === "all" ? setSearchParams({}) : setSearchParams({ cat: c.id });
+                      setMenuOpen(false);
+                    }}
+                    style={{
+                      background: activeCategory === c.id ? c.color : "none",
+                      border: "none",
+                      color: activeCategory === c.id ? "#fff" : COLORS.grey,
+                      textAlign: "left",
+                      padding: "0.55rem 0.7rem",
+                      fontFamily: "'Barlow Condensed',sans-serif",
+                      fontWeight: 700,
+                      fontSize: "0.82rem",
+                      letterSpacing: "0.06em",
+                      cursor: "pointer",
+                      borderRadius: "4px",
+                      transition: "background 0.15s, color 0.15s",
+                      borderLeft: activeCategory === c.id ? `3px solid rgba(255,255,255,0.4)` : "3px solid transparent",
+                    }}
+                  >
+                    {c.label}
+                  </button>
+                ))}
+              </div>
+            </div>
 
             {/* Sign-in row at bottom */}
             <div style={{ padding: "1rem 1.2rem", borderTop: `1px solid ${COLORS.border}` }}>
