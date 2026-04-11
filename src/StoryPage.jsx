@@ -64,10 +64,25 @@ export default function StoryPage() {
     try {
       const c = sessionStorage.getItem("htn-curated-cache");
       if (!c) return null;
-      return JSON.parse(c).find(a => storySlug(a.id) === storyId) || null;
+      const arts = JSON.parse(c);
+      return arts.find(a => storySlug(a.id) === storyId)
+          || arts.find(a => storySlug(a.link) === storyId)
+          || null;
     } catch { return null; }
   });
-  const [loading, setLoading] = useState(() => !sessionStorage.getItem("htn-curated-cache"));
+
+  // Still loading if no article was found in the cache
+  const [loading, setLoading] = useState(() => {
+    try {
+      const c = sessionStorage.getItem("htn-curated-cache");
+      if (!c) return true;
+      const arts = JSON.parse(c);
+      const found = arts.find(a => storySlug(a.id) === storyId)
+                 || arts.find(a => storySlug(a.link) === storyId);
+      return !found;
+    } catch { return true; }
+  });
+
   const [comments, setComments] = useState([]);
   const [commentsLoading, setCommentsLoading] = useState(true);
   const [commentText, setCommentText] = useState("");
@@ -75,16 +90,19 @@ export default function StoryPage() {
   const [commentError, setCommentError] = useState("");
   const [showAuthModal, setShowAuthModal] = useState(false);
 
+  // Fetch from JSONBin whenever the article wasn't found in sessionStorage cache
   useEffect(() => {
-    if (sessionStorage.getItem("htn-curated-cache")) return;
+    if (article) return;
     fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_ID}/latest`, {
       headers: { "X-Master-Key": JSONBIN_KEY },
     })
       .then(r => r.json())
       .then(data => {
-        const articles = data.record?.articles || [];
-        sessionStorage.setItem("htn-curated-cache", JSON.stringify(articles));
-        setArticle(articles.find(a => storySlug(a.id) === storyId) || null);
+        const arts = data.record?.articles || [];
+        sessionStorage.setItem("htn-curated-cache", JSON.stringify(arts));
+        const found = arts.find(a => storySlug(a.id) === storyId)
+                   || arts.find(a => storySlug(a.link) === storyId);
+        setArticle(found || null);
         setLoading(false);
       })
       .catch(() => setLoading(false));
