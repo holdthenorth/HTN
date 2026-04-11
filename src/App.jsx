@@ -125,6 +125,16 @@ function timeAgo(dateStr) {
 function isYT(url) { return url && (url.includes("youtube.com") || url.includes("youtu.be")); }
 function stripHtml(str) { return str ? str.replace(/<[^>]*>/g, "") : ""; }
 
+// Deterministic short ID derived from the source URL — produces a clean 7-char base-36 slug
+function storySlug(url) {
+  let h = 5381;
+  for (let i = 0; i < url.length; i++) {
+    h = ((h << 5) + h) ^ url.charCodeAt(i);
+    h = h >>> 0;
+  }
+  return h.toString(36).padStart(7, "0");
+}
+
 export default function HTNNews({ showLoader, onLoaderComplete }) {
   const { user, profile, signOut } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -477,7 +487,7 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
             ) : (
               <div className={loaded ? "s2" : ""} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "1rem" }}>
                 {visibleArticles.map(article => (
-                  <Link key={article.id} to={`/story/${encodeURIComponent(article.id)}`} style={{ textDecoration: "none" }}>
+                  <Link key={article.id} to={`/story/${storySlug(article.id)}`} style={{ textDecoration: "none" }}>
                     <div className="card" style={{ borderRadius: "6px", overflow: "hidden", height: "100%", borderTopColor: catColor }}>
                       {article.image && <img src={article.image} alt="" onError={e => { e.target.style.display = "none"; }} style={{ width: "100%", height: "200px", objectFit: "cover", display: "block" }} />}
                       <div style={{ padding: "0.9rem", display: "flex", flexDirection: "column", gap: "0.45rem", flex: 1 }}>
@@ -492,7 +502,7 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
                           {/* Share buttons — stopPropagation prevents the parent <Link> from navigating */}
                           <div style={{ display: "flex", gap: "0.3rem" }} onClick={e => e.stopPropagation()}>
                             {(() => {
-                              const su  = `${window.location.origin}/story/${encodeURIComponent(article.id)}`;
+                              const su  = `${window.location.origin}/story/${storySlug(article.id)}`;
                               const esu = encodeURIComponent(su);
                               const t   = encodeURIComponent(article.title);
                               const u   = encodeURIComponent(article.link || su);

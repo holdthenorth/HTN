@@ -34,6 +34,16 @@ function stripHtml(str) {
   return str ? str.replace(/<[^>]*>/g, "") : "";
 }
 
+// Must match the same function in App.jsx — derives a short 7-char base-36 slug from a source URL
+function storySlug(url) {
+  let h = 5381;
+  for (let i = 0; i < url.length; i++) {
+    h = ((h << 5) + h) ^ url.charCodeAt(i);
+    h = h >>> 0;
+  }
+  return h.toString(36).padStart(7, "0");
+}
+
 function timeAgoFull(dateStr) {
   if (!dateStr) return "";
   const d = new Date(dateStr);
@@ -54,7 +64,7 @@ export default function StoryPage() {
     try {
       const c = sessionStorage.getItem("htn-curated-cache");
       if (!c) return null;
-      return JSON.parse(c).find(a => a.id === decodeURIComponent(storyId)) || null;
+      return JSON.parse(c).find(a => storySlug(a.id) === storyId) || null;
     } catch { return null; }
   });
   const [loading, setLoading] = useState(() => !sessionStorage.getItem("htn-curated-cache"));
@@ -74,19 +84,19 @@ export default function StoryPage() {
       .then(data => {
         const articles = data.record?.articles || [];
         sessionStorage.setItem("htn-curated-cache", JSON.stringify(articles));
-        setArticle(articles.find(a => a.id === decodeURIComponent(storyId)) || null);
+        setArticle(articles.find(a => storySlug(a.id) === storyId) || null);
         setLoading(false);
       })
       .catch(() => setLoading(false));
   }, [storyId]);
 
-  const articleUrl = article?.link || decodeURIComponent(storyId);
+  const articleUrl = article?.link || "";
 
   // Update OG / Twitter meta tags when the article is available
   useEffect(() => {
     if (!article) return;
 
-    const canonicalUrl = `https://holdthenorth.news/story/${encodeURIComponent(article.id)}`;
+    const canonicalUrl = `https://holdthenorth.news/story/${storySlug(article.id)}`;
     const desc = stripHtml(article.description || "");
 
     const prev = {
