@@ -51,7 +51,7 @@ export default function SubmitPage() {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({
-        "form-name": "contact",
+        "form-name": "submit",
         name:    form.name,
         email:   form.email,
         type:    form.type,
@@ -120,8 +120,8 @@ export default function SubmitPage() {
             Your submission has been received. We read every message and will follow up at the email you provided. You can also reach us directly at <strong>editor@holdthenorth.news</strong>.
           </div>
         ) : (
-          <form name="contact" data-netlify="true" onSubmit={handleSubmit} style={{ maxWidth: 620 }}>
-            <input type="hidden" name="form-name" value="contact" />
+          <form name="submit" method="POST" data-netlify="true" onSubmit={handleSubmit} style={{ maxWidth: 620 }}>
+            <input type="hidden" name="form-name" value="submit" />
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
               <div>
                 <label className="sb-fl">Your Name *</label>
