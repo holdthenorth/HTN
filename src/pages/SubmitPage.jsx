@@ -50,20 +50,20 @@ export default function SubmitPage() {
     setSending(true);
     setError("");
     try {
-      const res = await fetch("https://formspree.io/f/mbdqrayg", {
+      const response = await fetch("https://api.web3forms.com/submit", {
         method: "POST",
-        headers: { "Accept": "application/json", "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name:    form.name,
-          email:   form.email,
-          type:    form.type,
-          subject: form.subject || "",
-          url:     form.url || "",
+          access_key: "10d40ab9-34ff-468c-abbb-175ba9f6cddf",
+          name: form.name,
+          email: form.email,
+          subject: form.subject,
           message: form.message,
-        }),
+          submission_type: form.type
+        })
       });
       setSending(false);
-      if (res.ok) {
+      if (response.ok) {
         setSubmitted(true);
       } else {
         setError("Something went wrong. Please try again or email us directly at editor@holdthenorth.news");
