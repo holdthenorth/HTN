@@ -47,31 +47,22 @@ export default function SubmitPage() {
     e.preventDefault();
     if (!form.name || !form.email || !form.message) return;
     setSending(true);
-    try {
-      const res = await fetch("/", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-          "form-name": "htn-submit",
-          name:    form.name,
-          email:   form.email,
-          type:    form.type,
-          subject: form.subject || "",
-          url:     form.url || "",
-          message: form.message,
-        }).toString(),
-      });
-      if (!res.ok) throw new Error("submit failed");
-      setSending(false);
+    const res = await fetch("/", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        "form-name": "contact",
+        name:    form.name,
+        email:   form.email,
+        type:    form.type,
+        subject: form.subject || "",
+        url:     form.url || "",
+        message: form.message,
+      }).toString(),
+    });
+    setSending(false);
+    if (res.ok) {
       setSubmitted(true);
-    } catch {
-      setSending(false);
-      // Fallback: open email client
-      const subject = encodeURIComponent(`[HTN ${form.type.toUpperCase()}] ${form.subject || "Submission"}`);
-      const body = encodeURIComponent(
-        `Name: ${form.name}\nEmail: ${form.email}\nType: ${form.type}\n${form.url ? `URL: ${form.url}\n` : ""}\n${form.message}`
-      );
-      window.location.href = `mailto:editor@holdthenorth.news?subject=${subject}&body=${body}`;
     }
   }
 
@@ -129,7 +120,8 @@ export default function SubmitPage() {
             Your submission has been received. We read every message and will follow up at the email you provided. You can also reach us directly at <strong>editor@holdthenorth.news</strong>.
           </div>
         ) : (
-          <form onSubmit={handleSubmit} style={{ maxWidth: 620 }}>
+          <form name="contact" data-netlify="true" onSubmit={handleSubmit} style={{ maxWidth: 620 }}>
+            <input type="hidden" name="form-name" value="contact" />
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
               <div>
                 <label className="sb-fl">Your Name *</label>
@@ -179,11 +171,8 @@ export default function SubmitPage() {
 
             <div style={{ display: "flex", alignItems: "center", gap: "1.2rem", flexWrap: "wrap" }}>
               <button className="sb-btn" type="submit" disabled={sending}>
-                {sending ? "Opening mail client…" : "Send Submission →"}
+                {sending ? "Sending…" : "Send Submission →"}
               </button>
-              <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: "0.68rem", letterSpacing: "0.08em", color: C.grey }}>
-                Or email us directly: <a href="mailto:editor@holdthenorth.news" style={{ color: C.red }}>editor@holdthenorth.news</a>
-              </span>
             </div>
           </form>
         )}
