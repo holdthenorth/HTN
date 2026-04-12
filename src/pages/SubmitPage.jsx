@@ -50,7 +50,7 @@ export default function SubmitPage() {
     setSending(true);
     setError("");
     try {
-      const res = await fetch("https://formspree.io/f/editor@holdthenorth.news", {
+      const res = await fetch("https://formspree.io/f/mbdqrayg", {
         method: "POST",
         headers: { "Accept": "application/json", "Content-Type": "application/json" },
         body: JSON.stringify({
