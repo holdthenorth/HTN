@@ -68,7 +68,7 @@ const css = `
   .mk .contact-box h3 { font-family:'Playfair Display',serif; font-size:1.4rem; margin-bottom:0.5rem; grid-column:1 / -1; }
   .mk .contact-item label { display:block; font-family:'JetBrains Mono',monospace; font-size:0.6rem; letter-spacing:0.2em; text-transform:uppercase; color:rgba(255,255,255,0.6); margin-bottom:0.3rem; }
   .mk .contact-item span { font-size:0.95rem; color:var(--white); }
-  .mk .contact-item a { color:var(--white); }
+  .mk .contact-item a { color:var(--white); text-decoration:underline; }
 
   .mk .mandate { background:var(--paper-warm); border:1px solid var(--rule); padding:2.5rem; margin:2rem 0; }
   .mk .mandate-head { font-family:'JetBrains Mono',monospace; font-size:0.6rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--light); margin-bottom:1rem; }
@@ -129,7 +129,7 @@ export default function MediaKit() {
             </div>
             <div className="cover-meta-item">
               <label>Press Contact</label>
-              <span>press@holdthenorth.news</span>
+              <span><a href="mailto:press@holdthenorth.news" style={{ color: "rgba(255,255,255,0.85)", textDecoration: "underline" }}>press@holdthenorth.news</a></span>
             </div>
           </div>
         </div>

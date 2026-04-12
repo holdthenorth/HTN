@@ -39,5 +39,16 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+
+    <!-- Hidden form for Netlify Forms detection (required for Vite SPA builds) -->
+    <form name="htn-submit" netlify data-netlify="true" hidden>
+      <input type="hidden" name="form-name" value="htn-submit" />
+      <input name="name" type="text" />
+      <input name="email" type="email" />
+      <input name="type" type="text" />
+      <input name="subject" type="text" />
+      <input name="url" type="text" />
+      <textarea name="message"></textarea>
+    </form>
   </body>
 </html>

@@ -47,16 +47,32 @@ export default function SubmitPage() {
     e.preventDefault();
     if (!form.name || !form.email || !form.message) return;
     setSending(true);
-    // Build mailto fallback — opens email client
-    const subject = encodeURIComponent(`[HTN ${form.type.toUpperCase()}] ${form.subject || "Submission"}`);
-    const body = encodeURIComponent(
-      `Name: ${form.name}\nEmail: ${form.email}\nType: ${form.type}\n${form.url ? `URL: ${form.url}\n` : ""}\n${form.message}`
-    );
-    window.location.href = `mailto:editor@holdthenorth.news?subject=${subject}&body=${body}`;
-    setTimeout(() => {
+    try {
+      const res = await fetch("/", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          "form-name": "htn-submit",
+          name:    form.name,
+          email:   form.email,
+          type:    form.type,
+          subject: form.subject || "",
+          url:     form.url || "",
+          message: form.message,
+        }).toString(),
+      });
+      if (!res.ok) throw new Error("submit failed");
       setSending(false);
       setSubmitted(true);
-    }, 800);
+    } catch {
+      setSending(false);
+      // Fallback: open email client
+      const subject = encodeURIComponent(`[HTN ${form.type.toUpperCase()}] ${form.subject || "Submission"}`);
+      const body = encodeURIComponent(
+        `Name: ${form.name}\nEmail: ${form.email}\nType: ${form.type}\n${form.url ? `URL: ${form.url}\n` : ""}\n${form.message}`
+      );
+      window.location.href = `mailto:editor@holdthenorth.news?subject=${subject}&body=${body}`;
+    }
   }
 
   return (
@@ -110,7 +126,7 @@ export default function SubmitPage() {
         {/* Form */}
         {submitted ? (
           <div className="sb-success">
-            Your email client has been opened with a pre-filled message. If it didn't open, write to us directly at <strong>editor@holdthenorth.news</strong>. We read every submission.
+            Your submission has been received. We read every message and will follow up at the email you provided. You can also reach us directly at <strong>editor@holdthenorth.news</strong>.
           </div>
         ) : (
           <form onSubmit={handleSubmit} style={{ maxWidth: 620 }}>
