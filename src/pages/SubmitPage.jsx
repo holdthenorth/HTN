@@ -38,6 +38,7 @@ export default function SubmitPage() {
   const [form, setForm] = useState({ name: "", email: "", type: "tip", subject: "", message: "", url: "" });
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
+  const [error, setError] = useState("");
 
   function handleChange(e) {
     setForm(f => ({ ...f, [e.target.name]: e.target.value }));
@@ -47,22 +48,29 @@ export default function SubmitPage() {
     e.preventDefault();
     if (!form.name || !form.email || !form.message) return;
     setSending(true);
-    const res = await fetch("/", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        "form-name": "submit",
-        name:    form.name,
-        email:   form.email,
-        type:    form.type,
-        subject: form.subject || "",
-        url:     form.url || "",
-        message: form.message,
-      }).toString(),
-    });
-    setSending(false);
-    if (res.ok) {
-      setSubmitted(true);
+    setError("");
+    try {
+      const res = await fetch("https://formspree.io/f/editor@holdthenorth.news", {
+        method: "POST",
+        headers: { "Accept": "application/json", "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name:    form.name,
+          email:   form.email,
+          type:    form.type,
+          subject: form.subject || "",
+          url:     form.url || "",
+          message: form.message,
+        }),
+      });
+      setSending(false);
+      if (res.ok) {
+        setSubmitted(true);
+      } else {
+        setError("Something went wrong. Please try again or email us directly at editor@holdthenorth.news");
+      }
+    } catch {
+      setSending(false);
+      setError("Could not send your message. Please email us directly at editor@holdthenorth.news");
     }
   }
 
@@ -120,8 +128,7 @@ export default function SubmitPage() {
             Your submission has been received. We read every message and will follow up at the email you provided. You can also reach us directly at <strong>editor@holdthenorth.news</strong>.
           </div>
         ) : (
-          <form name="submit" method="POST" data-netlify="true" onSubmit={handleSubmit} style={{ maxWidth: 620 }}>
-            <input type="hidden" name="form-name" value="submit" />
+          <form onSubmit={handleSubmit} style={{ maxWidth: 620 }}>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1rem" }}>
               <div>
                 <label className="sb-fl">Your Name *</label>
@@ -169,10 +176,19 @@ export default function SubmitPage() {
               />
             </div>
 
+            {error && (
+              <div style={{ marginBottom: "1rem", background: "#2B0D0D", border: "1px solid #5C1A1A", borderLeft: `3px solid ${C.red}`, padding: "0.9rem 1.1rem", fontFamily: "'Source Serif 4',serif", fontSize: "0.9rem", color: "#E07070", lineHeight: 1.6 }}>
+                {error}
+              </div>
+            )}
+
             <div style={{ display: "flex", alignItems: "center", gap: "1.2rem", flexWrap: "wrap" }}>
               <button className="sb-btn" type="submit" disabled={sending}>
                 {sending ? "Sending…" : "Send Submission →"}
               </button>
+              <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: "0.68rem", letterSpacing: "0.08em", color: C.grey }}>
+                Or email us directly: <a href="mailto:editor@holdthenorth.news" style={{ color: C.red }}>editor@holdthenorth.news</a>
+              </span>
             </div>
           </form>
         )}
