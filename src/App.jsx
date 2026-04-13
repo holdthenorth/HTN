@@ -1,6 +1,26 @@
 const JSONBIN_ID = import.meta.env.VITE_JSONBIN_ID;
 const JSONBIN_KEY = import.meta.env.VITE_JSONBIN_KEY;
 
+// Start the JSONBin fetch immediately at module level — before React mounts —
+// so the network request is already in-flight by the time useEffect fires.
+// If all three caches are warm, skip the fetch entirely.
+let _jsonbinPromise = null;
+function getJsonbinData() {
+  if (!_jsonbinPromise) {
+    _jsonbinPromise = fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_ID}/latest`, {
+      headers: { "X-Master-Key": JSONBIN_KEY },
+    }).then(r => r.json());
+  }
+  return _jsonbinPromise;
+}
+if (
+  !sessionStorage.getItem("htn-curated-cache") ||
+  !sessionStorage.getItem("htn-voices-cache") ||
+  !sessionStorage.getItem("htn-pitch-cache")
+) {
+  getJsonbinData(); // fire early — result consumed in useEffect below
+}
+
 import { useState, useEffect } from "react";
 import { Routes, Route, Link, NavLink, useLocation, useSearchParams } from 'react-router-dom';
 import MapleLeafLoader from "./MapleLeafLoader";
@@ -202,21 +222,19 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
     const hasVoices = sessionStorage.getItem("htn-voices-cache");
     const hasPitch = sessionStorage.getItem("htn-pitch-cache");
     if (hasArticles && hasVoices && hasPitch) return;
-    fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_ID}/latest`, {
-      headers: { "X-Master-Key": JSONBIN_KEY }
-    })
-    .then(r => r.json())
-    .then(data => {
-      const articles = data.record?.articles || [];
-      const voices = data.record?.voices || [];
-      const pitchPosts = data.record?.pitchPosts || [];
-      sessionStorage.setItem("htn-curated-cache", JSON.stringify(articles));
-      sessionStorage.setItem("htn-voices-cache", JSON.stringify(voices));
-      sessionStorage.setItem("htn-pitch-cache", JSON.stringify(pitchPosts));
-      setCurated(articles);
-      setFeedLoading(false);
-    })
-    .catch(() => { setCurated([]); setFeedLoading(false); });
+    // Reuse the already-in-flight promise started at module level
+    getJsonbinData()
+      .then(data => {
+        const articles = data.record?.articles || [];
+        const voices = data.record?.voices || [];
+        const pitchPosts = data.record?.pitchPosts || [];
+        sessionStorage.setItem("htn-curated-cache", JSON.stringify(articles));
+        sessionStorage.setItem("htn-voices-cache", JSON.stringify(voices));
+        sessionStorage.setItem("htn-pitch-cache", JSON.stringify(pitchPosts));
+        setCurated(articles);
+        setFeedLoading(false);
+      })
+      .catch(() => { setCurated([]); setFeedLoading(false); });
   }, []);
 
   useEffect(() => { loadItems(); setTimeout(() => setLoaded(true), 80); }, []);
