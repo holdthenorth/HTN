@@ -511,10 +511,10 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
               </div>
             ) : (
               <div className={loaded ? "s2" : ""} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "1rem" }}>
-                {visibleArticles.map(article => (
+                {visibleArticles.map((article, idx) => (
                   <Link key={article.id} to={`/story/${storySlug(article.id)}`} style={{ textDecoration: "none" }}>
                     <div className="card" style={{ borderRadius: "6px", overflow: "hidden", height: "100%", borderTopColor: catColor }}>
-                      {article.image && <img src={article.image} alt="" onError={e => { e.target.style.display = "none"; }} style={{ width: "100%", height: "200px", objectFit: "cover", display: "block" }} />}
+                      {article.image && <img src={article.image} alt="" width="640" height="200" loading={idx === 0 ? "eager" : "lazy"} fetchpriority={idx === 0 ? "high" : "auto"} decoding={idx === 0 ? "sync" : "async"} onError={e => { e.target.style.display = "none"; }} style={{ width: "100%", height: "200px", objectFit: "cover", display: "block" }} />}
                       <div style={{ padding: "0.9rem", display: "flex", flexDirection: "column", gap: "0.45rem", flex: 1 }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
                           <span style={{ background: COLORS.red, color: COLORS.white, fontSize: "0.62rem", padding: "0.18rem 0.5rem", borderRadius: "3px", letterSpacing: "0.08em", whiteSpace: "nowrap", fontWeight: 700, fontFamily: "'Barlow Condensed',sans-serif" }}>{article.source}</span>
