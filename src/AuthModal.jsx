@@ -14,9 +14,9 @@ const COLORS = {
   border: "#1E2A3A",
 };
 
-export default function AuthModal({ onClose }) {
+export default function AuthModal({ onClose, initialTab = "signin" }) {
   const { signIn, signUp } = useAuth();
-  const [tab, setTab] = useState("signin"); // "signin" | "signup"
+  const [tab, setTab] = useState(initialTab); // "signin" | "signup"
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");

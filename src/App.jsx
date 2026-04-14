@@ -160,6 +160,7 @@ function storySlug(url) {
 export default function HTNNews({ showLoader, onLoaderComplete }) {
   const { user, profile, signOut } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authModalTab, setAuthModalTab] = useState("signin");
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [items, setItems] = useState([]);
   const [adminMode, setAdminMode] = useState(false);
@@ -428,14 +429,23 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
                     )}
                   </div>
                 ) : (
-                  <button
-                    className="nav-btn"
-                    onClick={() => setShowAuthModal(true)}
-                    style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}
-                  >
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-                    Sign In
-                  </button>
+                  <>
+                    <button
+                      className="nav-btn"
+                      onClick={() => { setAuthModalTab("signup"); setShowAuthModal(true); }}
+                      style={{ display: "flex", alignItems: "center", gap: "0.35rem", background: COLORS.red, color: "#fff", border: "none", padding: "0.4rem 0.9rem", fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, fontSize: "0.72rem", letterSpacing: "0.12em", textTransform: "uppercase", cursor: "pointer" }}
+                    >
+                      Subscribe
+                    </button>
+                    <button
+                      className="nav-btn"
+                      onClick={() => { setAuthModalTab("signin"); setShowAuthModal(true); }}
+                      style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                      Sign In
+                    </button>
+                  </>
                 )}
 
                 {/* Hamburger — only visible on mobile via CSS */}
@@ -591,7 +601,7 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
               <a href="https://holdthenorth.news" style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: "0.62rem", letterSpacing: "0.18em", textTransform: "uppercase", color: COLORS.red, textDecoration: "none" }}>holdthenorth.news</a>
 
               {/* Ko-fi support button */}
-              <div style={{ marginTop: "1.4rem" }}>
+              <div style={{ marginTop: "1.4rem", display: "flex", flexDirection: "column", gap: "0.75rem", alignItems: "flex-start" }}>
                 <a href="https://ko-fi.com/X8X41XSDD8" target="_blank" rel="noopener noreferrer"
                   title="Support me on Ko-fi"
                   style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", background: "#C8102E", color: "#fff", padding: "10px 15px", fontFamily: "'Nunito', 'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "14px", lineHeight: 1, letterSpacing: "0.03em", borderRadius: "8px", textDecoration: "none", transition: "background 0.2s" }}
@@ -601,6 +611,16 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
                   <img src="https://storage.ko-fi.com/cdn/cup-border.png" alt="" style={{ height: 20, width: "auto" }} />
                   Support Independent Journalism
                 </a>
+                {!user && (
+                  <button
+                    onClick={() => { setAuthModalTab("signup"); setShowAuthModal(true); }}
+                    style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", background: "transparent", border: `1px solid ${COLORS.red}`, color: COLORS.red, padding: "10px 15px", fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.78rem", letterSpacing: "0.14em", textTransform: "uppercase", lineHeight: 1, borderRadius: "8px", cursor: "pointer", transition: "all 0.2s" }}
+                    onMouseEnter={e => { e.currentTarget.style.background = COLORS.red; e.currentTarget.style.color = "#fff"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = COLORS.red; }}
+                  >
+                    Subscribe
+                  </button>
+                )}
               </div>
             </div>
 
@@ -732,7 +752,7 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
           </div>
         )}
 
-        {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
+        {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} initialTab={authModalTab} />}
         {showUserMenu && <div onClick={() => setShowUserMenu(false)} style={{ position: "fixed", inset: 0, zIndex: 99 }} />}
         {toast && <div className="toast">{toast}</div>}
       </div>
@@ -824,15 +844,25 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
                   Sign Out
                 </button>
               ) : (
-                <button
-                  onClick={() => { setShowAuthModal(true); setMenuOpen(false); }}
-                  style={{ width: "100%", background: COLORS.red, border: "none", color: "#fff", padding: "0.75rem 1rem", fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, fontSize: "0.78rem", letterSpacing: "0.14em", textTransform: "uppercase", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", transition: "background 0.2s" }}
-                  onMouseEnter={e => e.currentTarget.style.background = COLORS.redDark}
-                  onMouseLeave={e => e.currentTarget.style.background = COLORS.red}
-                >
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-                  Sign In
-                </button>
+                <>
+                  <button
+                    onClick={() => { setAuthModalTab("signin"); setShowAuthModal(true); setMenuOpen(false); }}
+                    style={{ width: "100%", background: COLORS.red, border: "none", color: "#fff", padding: "0.75rem 1rem", fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, fontSize: "0.78rem", letterSpacing: "0.14em", textTransform: "uppercase", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", transition: "background 0.2s" }}
+                    onMouseEnter={e => e.currentTarget.style.background = COLORS.redDark}
+                    onMouseLeave={e => e.currentTarget.style.background = COLORS.red}
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                    Sign In
+                  </button>
+                  <button
+                    onClick={() => { setAuthModalTab("signup"); setShowAuthModal(true); setMenuOpen(false); }}
+                    style={{ width: "100%", background: "transparent", border: `1px solid ${COLORS.red}`, color: COLORS.red, padding: "0.75rem 1rem", fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, fontSize: "0.78rem", letterSpacing: "0.14em", textTransform: "uppercase", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", transition: "all 0.2s" }}
+                    onMouseEnter={e => { e.currentTarget.style.background = COLORS.red; e.currentTarget.style.color = "#fff"; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = COLORS.red; }}
+                  >
+                    Subscribe
+                  </button>
+                </>
               )}
             </div>
           </div>
