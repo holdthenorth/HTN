@@ -663,7 +663,30 @@ export default function RSSDashboard() {
       )}
 
       {loading ? (
-        <div style={{ color: COLORS.grey, textAlign: "center", padding: "4rem", fontSize: "1.1rem" }}>Loading stories from all sources… 🍁</div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "1rem" }}>
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} style={{ background: COLORS.card, border: `1px solid ${COLORS.border}`, borderRadius: "6px", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+              {/* image placeholder */}
+              <div style={{ width: "100%", height: "160px", background: COLORS.border, animation: "htn-skel 1.5s ease-in-out infinite", backgroundSize: "600px 100%", backgroundImage: `linear-gradient(90deg,${COLORS.border} 25%,#333 50%,${COLORS.border} 75%)` }} />
+              <div style={{ padding: "0.9rem", display: "flex", flexDirection: "column", gap: "0.55rem" }}>
+                {/* source + date row */}
+                <div style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem" }}>
+                  <div style={{ height: 14, width: "32%", borderRadius: 3, background: COLORS.border, animation: "htn-skel 1.5s ease-in-out infinite", backgroundSize: "600px 100%", backgroundImage: `linear-gradient(90deg,${COLORS.border} 25%,#333 50%,${COLORS.border} 75%)` }} />
+                  <div style={{ height: 14, width: "18%", borderRadius: 3, background: COLORS.border, animation: "htn-skel 1.5s ease-in-out infinite", backgroundSize: "600px 100%", backgroundImage: `linear-gradient(90deg,${COLORS.border} 25%,#333 50%,${COLORS.border} 75%)` }} />
+                </div>
+                {/* title lines */}
+                <div style={{ height: 16, width: "92%", borderRadius: 3, background: COLORS.border, animation: "htn-skel 1.5s ease-in-out infinite", backgroundSize: "600px 100%", backgroundImage: `linear-gradient(90deg,${COLORS.border} 25%,#333 50%,${COLORS.border} 75%)` }} />
+                <div style={{ height: 16, width: "68%", borderRadius: 3, background: COLORS.border, animation: "htn-skel 1.5s ease-in-out infinite", backgroundSize: "600px 100%", backgroundImage: `linear-gradient(90deg,${COLORS.border} 25%,#333 50%,${COLORS.border} 75%)` }} />
+                {/* description lines */}
+                <div style={{ height: 12, width: "96%", borderRadius: 3, background: COLORS.border, animation: "htn-skel 1.5s ease-in-out infinite", backgroundSize: "600px 100%", backgroundImage: `linear-gradient(90deg,${COLORS.border} 25%,#333 50%,${COLORS.border} 75%)` }} />
+                <div style={{ height: 12, width: "80%", borderRadius: 3, background: COLORS.border, animation: "htn-skel 1.5s ease-in-out infinite", backgroundSize: "600px 100%", backgroundImage: `linear-gradient(90deg,${COLORS.border} 25%,#333 50%,${COLORS.border} 75%)` }} />
+                {/* button row */}
+                <div style={{ marginTop: "0.4rem", height: 30, width: "100%", borderRadius: 4, background: COLORS.border, animation: "htn-skel 1.5s ease-in-out infinite", backgroundSize: "600px 100%", backgroundImage: `linear-gradient(90deg,${COLORS.border} 25%,#333 50%,${COLORS.border} 75%)` }} />
+              </div>
+            </div>
+          ))}
+          <style>{`@keyframes htn-skel{0%{background-position:-600px 0}100%{background-position:600px 0}}`}</style>
+        </div>
       ) : filtered.length === 0 ? (
         <div style={{ color: COLORS.grey, textAlign: "center", padding: "4rem", fontSize: "1rem" }}>No stories match your filter.</div>
       ) : (
