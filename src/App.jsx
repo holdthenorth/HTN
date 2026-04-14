@@ -298,6 +298,7 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
       {showLoader && <MapleLeafLoader onComplete={onLoaderComplete} />}
       <div style={{ minHeight: "100vh", background: COLORS.navy, color: COLORS.offWhite, fontFamily: "Georgia, serif", overflowX: "hidden" }}>
         <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;1,8..60,400&family=Barlow+Condensed:wght@400;600;700&display=swap');
           *{box-sizing:border-box;margin:0;padding:0}
           @keyframes htnFade{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
           @keyframes tickFade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
@@ -589,6 +590,18 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
               </p>
               <a href="https://holdthenorth.news" style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: "0.62rem", letterSpacing: "0.18em", textTransform: "uppercase", color: COLORS.red, textDecoration: "none" }}>holdthenorth.news</a>
 
+              {/* Ko-fi support button */}
+              <div style={{ marginTop: "1.4rem" }}>
+                <a href="https://ko-fi.com/X8X41XSDD8" target="_blank" rel="noopener noreferrer"
+                  title="Support me on Ko-fi"
+                  style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", background: "#C8102E", color: "#fff", padding: "10px 15px", fontFamily: "'Nunito', 'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "14px", lineHeight: 1, letterSpacing: "0.03em", borderRadius: "8px", textDecoration: "none", transition: "background 0.2s" }}
+                  onMouseEnter={e => e.currentTarget.style.background = "#A00D24"}
+                  onMouseLeave={e => e.currentTarget.style.background = "#C8102E"}
+                >
+                  <img src="https://storage.ko-fi.com/cdn/cup-border.png" alt="" style={{ height: 20, width: "auto" }} />
+                  Support Independent Journalism
+                </a>
+              </div>
             </div>
 
             {/* MIDDLE — Nav columns */}
@@ -922,26 +935,6 @@ export function App() {
 
   return (
     <AuthProvider>
-    {/* Ko-fi button — outside Routes so it appears on every page */}
-    <a href="https://ko-fi.com/X8X41XSDD8" target="_blank" rel="noopener noreferrer"
-      title="Support me on Ko-fi"
-      style={{
-        position: "fixed", bottom: "1.5rem", right: "1.5rem", zIndex: 1500,
-        display: "inline-flex", alignItems: "center", gap: "0.5rem",
-        background: "#C8102E", color: "#fff",
-        padding: "10px 15px",
-        fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700,
-        fontSize: "13px", letterSpacing: "0.06em",
-        borderRadius: "8px", textDecoration: "none",
-        boxShadow: "0 4px 16px rgba(0,0,0,0.45)",
-        transition: "background 0.2s, transform 0.15s",
-      }}
-      onMouseEnter={e => { e.currentTarget.style.background = "#A00D24"; e.currentTarget.style.transform = "translateY(-2px)"; }}
-      onMouseLeave={e => { e.currentTarget.style.background = "#C8102E"; e.currentTarget.style.transform = "translateY(0)"; }}
-    >
-      <img src="https://storage.ko-fi.com/cdn/cup-border.png" alt="" style={{ height: 18, width: "auto" }} />
-      Support HTN
-    </a>
     <Routes>
       <Route path="/" element={<HTNNews showLoader={showLoader} onLoaderComplete={() => setShowLoader(false)} />} />
       <Route path="/story/:storyId" element={<StoryPage />} />
