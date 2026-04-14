@@ -118,7 +118,9 @@ export default async function handler(request, context) {
   const canonicalUrl = `${SITE_URL}/story/${storyId}`;
   const title        = article.title || "Hold the North";
   const desc         = stripHtml(article.description || "").slice(0, 300);
-  const image        = absoluteImage(article.image); // guaranteed https:// absolute URL
+  const image        = absoluteImage(
+    article.image || article.thumbnail || article.urlToImage || article.imageUrl
+  ); // guaranteed https:// absolute URL
 
   // Replace <title>
   html = html.replace(
