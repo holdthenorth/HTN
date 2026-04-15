@@ -512,7 +512,10 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
               seen.add(key);
               return true;
             });
-            const visibleArticles = activeCategory === "all" ? deduped : deduped.filter(a => a.category === activeCategory);
+            // Normalise stored category (may be an id "on-the-ground" or a legacy
+            // label "On the Ground") to an id before comparing.
+            const normCat = cat => CATEGORIES.find(c => c.id === cat || c.label === cat)?.id || cat || "";
+            const visibleArticles = activeCategory === "all" ? deduped : deduped.filter(a => normCat(a.category) === activeCategory);
             const catColor = CATEGORIES.find(c => c.id === activeCategory)?.color || COLORS.red;
             if (feedLoading) return (
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "1rem" }}>

@@ -254,11 +254,24 @@ export default function RSSDashboard() {
     if (!res.ok) throw new Error();
   }
 
+  // Normalise a category value to an ARTICLE_CATEGORIES id.
+  // Handles labels ("On the Ground" → "on-the-ground") and already-correct ids.
+  function normCatId(cat) {
+    if (!cat) return "";
+    return ARTICLE_CATEGORIES.find(c => c.id === cat || c.label === cat)?.id || cat;
+  }
+
   async function saveFeatured() {
     const heroArticle = heroId ? articles.find(a => a.id === heroId) : null;
     const featuredArticles = articles.filter(a => featured.includes(a.id) && a.id !== heroId);
     const ordered = [...(heroArticle ? [heroArticle] : []), ...featuredArticles]
-      .map(a => ({ ...a, curatorNote: notes[a.id]?.note || "", category: notes[a.id]?.category || "" }));
+      .map(a => ({
+        ...a,
+        curatorNote: notes[a.id]?.note || "",
+        // Prefer the curator-assigned category; fall back to the article's own
+        // category (normalised to an id) so label-format values are corrected.
+        category: normCatId(notes[a.id]?.category || a.category) || "",
+      }));
     if (ordered.length === 0) return;
     setSaveStatus("saving");
     try {
