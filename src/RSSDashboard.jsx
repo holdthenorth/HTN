@@ -41,7 +41,8 @@ const SOURCES = [
   { id: "cbc-pol",  name: "CBC Politics",     category: "Mainstream",  url: "https://rss.cbc.ca/lineup/politics.xml" },
   { id: "global",   name: "Global News",      category: "Mainstream",  url: "https://globalnews.ca/feed/" },
   { id: "observer", name: "National Observer",category: "Independent", url: "https://www.nationalobserver.com/front/rss" },
-  { id: "angus",    name: "Charlie Angus",    category: "Independent", url: "https://charlieangus.substack.com/feed" },
+  { id: "htn-substack", name: "Hold the North",  category: "Independent", url: "https://holdthenorth.substack.com/feed" },
+  { id: "angus",        name: "Charlie Angus",  category: "Independent", url: "https://charlieangus.substack.com/feed" },
   { id: "gilmore",  name: "Rachel Gilmore",   category: "Independent", url: "https://rachelgilmore.substack.com/feed" },
   { id: "wells",    name: "Paul Wells",       category: "Independent", url: "https://paulwells.substack.com/feed" },
   { id: "moscrop",  name: "David Moscrop",    category: "Independent", url: "https://davidmoscrop.substack.com/feed" },
@@ -206,6 +207,7 @@ export default function RSSDashboard() {
     });
     setArticles(deduped);
     setLoading(false);
+    autoSyncNewArticles(deduped);
   }
 
   function removeFeatured(id) {
@@ -254,11 +256,73 @@ export default function RSSDashboard() {
     if (!res.ok) throw new Error();
   }
 
+  function normCatId(cat) {
+    if (!cat) return "";
+    return ARTICLE_CATEGORIES.find(c => c.id === cat || c.label === cat)?.id || cat;
+  }
+
+  async function autoSyncNewArticles(freshArticles) {
+    if (!freshArticles.length) return;
+    try {
+      // Inline fetch so we can check res.ok before touching anything.
+      // The previous version used fetchCurrentBin() which didn't check res.ok —
+      // a 429/401 made data.record undefined, existing fell to [], and ALL fresh
+      // articles became toAdd, overwriting the curated list.
+      const readRes = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_ID}/latest`, {
+        headers: { "X-Master-Key": JSONBIN_KEY },
+      });
+      if (!readRes.ok) return; // rate-limit or auth error — abort, never write
+
+      const data = await readRes.json();
+      const existing = data.record?.articles || [];
+
+      // Second guard: if the bin returned 0 articles something is wrong.
+      // Writing 100+ raw RSS articles into an apparently-empty bin would
+      // silently wipe whatever was there.
+      if (existing.length === 0) return;
+
+      const existingKeys = new Set();
+      existing.forEach(a => {
+        if (a.id)   existingKeys.add(a.id);
+        if (a.link) existingKeys.add(a.link);
+      });
+
+      const toAdd = freshArticles
+        .filter(a => !existingKeys.has(a.id) && !existingKeys.has(a.link))
+        .map(a => ({
+          ...a,
+          curatorNote: "",
+          category: normCatId(a.category) || a.category || "",
+        }));
+
+      if (toAdd.length === 0) return; // nothing new — no write needed
+
+      // Curated articles stay first; new ones are appended at the end.
+      const merged = [...existing, ...toAdd];
+
+      // Re-use the voices/pitchPosts from the same read response so there is
+      // no second fetch and no race condition with the component-state load.
+      const writeRes = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_ID}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", "X-Master-Key": JSONBIN_KEY },
+        body: JSON.stringify({
+          articles: merged,
+          voices: data.record?.voices || [],
+          pitchPosts: data.record?.pitchPosts || [],
+        }),
+      });
+      if (!writeRes.ok) throw new Error(`PUT ${writeRes.status}`);
+      console.log(`[HTN sync] +${toAdd.length} new articles appended (total: ${merged.length})`);
+    } catch (err) {
+      console.warn("[HTN sync] skipped:", err.message);
+    }
+  }
+
   async function saveFeatured() {
     const heroArticle = heroId ? articles.find(a => a.id === heroId) : null;
     const featuredArticles = articles.filter(a => featured.includes(a.id) && a.id !== heroId);
     const ordered = [...(heroArticle ? [heroArticle] : []), ...featuredArticles]
-      .map(a => ({ ...a, curatorNote: notes[a.id]?.note || "", category: notes[a.id]?.category || "" }));
+      .map(a => ({ ...a, curatorNote: notes[a.id]?.note || "", category: normCatId(notes[a.id]?.category || a.category) || "" }));
     if (ordered.length === 0) return;
     setSaveStatus("saving");
     try {
