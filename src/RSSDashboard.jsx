@@ -41,8 +41,7 @@ const SOURCES = [
   { id: "cbc-pol",  name: "CBC Politics",     category: "Mainstream",  url: "https://rss.cbc.ca/lineup/politics.xml" },
   { id: "global",   name: "Global News",      category: "Mainstream",  url: "https://globalnews.ca/feed/" },
   { id: "observer", name: "National Observer",category: "Independent", url: "https://www.nationalobserver.com/front/rss" },
-  { id: "htn-substack", name: "Hold the North", category: "voices",      url: "https://holdthenorth.substack.com/feed" },
-  { id: "angus",        name: "Charlie Angus",  category: "Independent", url: "https://charlieangus.substack.com/feed" },
+  { id: "angus",    name: "Charlie Angus",    category: "Independent", url: "https://charlieangus.substack.com/feed" },
   { id: "gilmore",  name: "Rachel Gilmore",   category: "Independent", url: "https://rachelgilmore.substack.com/feed" },
   { id: "wells",    name: "Paul Wells",       category: "Independent", url: "https://paulwells.substack.com/feed" },
   { id: "moscrop",  name: "David Moscrop",    category: "Independent", url: "https://davidmoscrop.substack.com/feed" },
@@ -168,7 +167,6 @@ export default function RSSDashboard() {
         }
         const res = await fetch(`${RSS2JSON}${encodeURIComponent(source.url)}&count=8`);
         const data = await res.json();
-        console.log(`[HTN fetch] ${source.name} → status: ${data.status}, items: ${data.items?.length ?? 0}`, data.message || "");
         if (!data.items) return;
         data.items.forEach(item => {
           if (!item) return;
@@ -189,11 +187,8 @@ export default function RSSDashboard() {
             category: source.category,
           });
         });
-      } catch (err) {
-        console.error(`[HTN fetch] ${source.name} FAILED:`, err);
-      }
+      } catch {}
     }));
-    console.log(`[HTN fetch] Total articles fetched from all sources: ${results.length}`);
     results.sort((a, b) => {
       const da = parseDate(a.pubDate);
       const db = parseDate(b.pubDate);
@@ -209,10 +204,8 @@ export default function RSSDashboard() {
       seen.add(a.id);
       return true;
     });
-    console.log(`[HTN fetch] After dedup: ${deduped.length} articles`, deduped.map(a => a.source + ": " + a.title?.slice(0, 40)));
     setArticles(deduped);
     setLoading(false);
-    autoSyncNewArticles(deduped);
   }
 
   function removeFeatured(id) {
@@ -266,47 +259,6 @@ export default function RSSDashboard() {
   function normCatId(cat) {
     if (!cat) return "";
     return ARTICLE_CATEGORIES.find(c => c.id === cat || c.label === cat)?.id || cat;
-  }
-
-  /**
-   * After every RSS fetch, diff the fresh articles against what's already in
-   * JSONBin and append any that aren't there yet.  Runs silently in the
-   * background — dashboard UI is never blocked or notified.
-   */
-  async function autoSyncNewArticles(freshArticles) {
-    if (!freshArticles.length) return;
-    try {
-      const current = await fetchCurrentBin();
-      const existing = current.articles || [];
-      console.log(`[HTN sync] JSONBin currently has ${existing.length} articles`);
-
-      // Build a set of all known ids and links so we can detect duplicates
-      // regardless of which field was used as the canonical identifier.
-      const existingKeys = new Set();
-      existing.forEach(a => {
-        if (a.id)   existingKeys.add(a.id);
-        if (a.link) existingKeys.add(a.link);
-      });
-
-      const toAdd = freshArticles
-        .filter(a => !existingKeys.has(a.id) && !existingKeys.has(a.link))
-        .map(a => ({
-          ...a,
-          curatorNote: "",
-          category: normCatId(a.category) || a.category || "",
-        }));
-
-      console.log(`[HTN sync] New articles not yet in JSONBin: ${toAdd.length}`, toAdd.map(a => a.source + ": " + a.title?.slice(0, 40)));
-
-      if (toAdd.length === 0) return; // nothing new
-
-      // Prepend new articles so the JSONBin list stays newest-first
-      const merged = [...toAdd, ...existing];
-      await putToJsonBin(merged, current.voices || [], current.pitchPosts || []);
-      console.log(`[HTN sync] ✓ Pushed ${toAdd.length} new articles to JSONBin (total now: ${merged.length})`);
-    } catch (err) {
-      console.error("[HTN sync] autoSyncNewArticles failed:", err);
-    }
   }
 
   async function saveFeatured() {
