@@ -206,6 +206,7 @@ export default function RSSDashboard() {
     });
     setArticles(deduped);
     setLoading(false);
+    autoSyncNewArticles(deduped);
   }
 
   function removeFeatured(id) {
@@ -259,6 +260,43 @@ export default function RSSDashboard() {
   function normCatId(cat) {
     if (!cat) return "";
     return ARTICLE_CATEGORIES.find(c => c.id === cat || c.label === cat)?.id || cat;
+  }
+
+  /**
+   * After every RSS fetch, diff the fresh articles against what's already in
+   * JSONBin and append any that aren't there yet.  Runs silently in the
+   * background — dashboard UI is never blocked or notified.
+   */
+  async function autoSyncNewArticles(freshArticles) {
+    if (!freshArticles.length) return;
+    try {
+      const current = await fetchCurrentBin();
+      const existing = current.articles || [];
+
+      // Build a set of all known ids and links so we can detect duplicates
+      // regardless of which field was used as the canonical identifier.
+      const existingKeys = new Set();
+      existing.forEach(a => {
+        if (a.id)   existingKeys.add(a.id);
+        if (a.link) existingKeys.add(a.link);
+      });
+
+      const toAdd = freshArticles
+        .filter(a => !existingKeys.has(a.id) && !existingKeys.has(a.link))
+        .map(a => ({
+          ...a,
+          curatorNote: "",
+          category: normCatId(a.category) || a.category || "",
+        }));
+
+      if (toAdd.length === 0) return; // nothing new
+
+      // Prepend new articles so the JSONBin list stays newest-first
+      const merged = [...toAdd, ...existing];
+      await putToJsonBin(merged, current.voices || [], current.pitchPosts || []);
+    } catch {
+      // Silent fail — auto-sync is best-effort and must never break the dashboard
+    }
   }
 
   async function saveFeatured() {
