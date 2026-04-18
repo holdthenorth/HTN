@@ -22,7 +22,7 @@ function isRecent(article) {
   return isNaN(d.getTime()) || d.getTime() >= Date.now() - CUTOFF_MS;
 }
 
-exports.handler = async (event) => {
+export const handler = async (event) => {
   // Read env vars inside the handler so they are always fresh.
   // .trim() prevents issues with accidental trailing whitespace/newlines from Netlify UI paste.
   const JSONBIN_ID  = (process.env.VITE_JSONBIN_ID  || "69ce762aaaba882197bac5e8").trim();

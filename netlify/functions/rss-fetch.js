@@ -1,4 +1,4 @@
-exports.handler = async function (event) {
+export const handler = async function (event) {
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, OPTIONS",

@@ -1,15 +1,4 @@
-/**
- * Netlify serverless function — GET /.netlify/functions/rss-proxy?url=<encoded>
- *
- * Server-side RSS proxy. Fetches any feed URL and returns the raw XML with
- * CORS headers so the browser can read cross-origin feeds (e.g. Substack)
- * without being blocked.
- *
- * Substack blocks rss2json and returns CORS errors on direct browser fetches,
- * so all Substack feed URLs in RSSDashboard.jsx route through here instead.
- */
-
-exports.handler = async function (event) {
+export const handler = async function (event) {
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, OPTIONS",
