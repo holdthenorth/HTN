@@ -38,4 +38,15 @@ export default async (req, context) => {
       headers: {
         'Content-Type': 'application/xml; charset=utf-8',
         'Access-Control-Allow-Origin': '*',
-        'Cache-Control': 'publi
+        'Cache-Control': 'public, max-age=60',
+      }
+    });
+  } catch (err) {
+    return new Response(JSON.stringify({ error: 'Upstream fetch failed', detail: err.message }), {
+      status: 502,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+    });
+  }
+};
+
+export const config = { path: '/api/fetch-rss' };
