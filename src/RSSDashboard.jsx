@@ -172,7 +172,7 @@ export default function RSSDashboard() {
         if (source.url.includes("substack.com")) {
           // Fetch Substack RSS directly — rss2json strips enclosure images and
           // often fails on Substack's feed, so we parse the XML ourselves.
-          const xmlRes = await fetch(`/.netlify/functions/rss-fetch?url=${encodeURIComponent(source.url)}`);
+          const xmlRes = await fetch(`/.netlify/functions/rss-proxy?url=${encodeURIComponent(source.url)}`);
           if (!xmlRes.ok) return;
           const xmlText = await xmlRes.text();
           const doc = new DOMParser().parseFromString(xmlText, "text/xml");
