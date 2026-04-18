@@ -83,9 +83,9 @@ export default async function handler(request, context) {
   if (!sourceUrl || !sourceUrl.startsWith("http")) return context.next();
 
   // Read env vars (available in Netlify edge functions via Deno.env)
-  const JSONBIN_ID  = Deno.env.get("VITE_JSONBIN_ID");
+  const JSONBIN_ID  = Deno.env.get("VITE_JSONBIN_ID") || "69ce762aaaba882197bac5e8";
   const JSONBIN_KEY = Deno.env.get("VITE_JSONBIN_KEY");
-  if (!JSONBIN_ID || !JSONBIN_KEY) return context.next();
+  if (!JSONBIN_KEY) return context.next();
 
   // Fetch article list from JSONBin with a hard timeout
   let article = null;

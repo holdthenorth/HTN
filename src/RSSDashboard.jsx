@@ -22,7 +22,7 @@ function getYTId(url) {
   } catch {}
   return null;
 }
-const JSONBIN_ID = import.meta.env.VITE_JSONBIN_ID;
+const JSONBIN_ID = import.meta.env.VITE_JSONBIN_ID || "69ce762aaaba882197bac5e8";
 const JSONBIN_KEY = import.meta.env.VITE_JSONBIN_KEY;
 
 const ARTICLE_CATEGORIES = [

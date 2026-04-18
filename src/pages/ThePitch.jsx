@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 
-const JSONBIN_ID = import.meta.env.VITE_JSONBIN_ID;
+const JSONBIN_ID = import.meta.env.VITE_JSONBIN_ID || "69ce762aaaba882197bac5e8";
 const JSONBIN_KEY = import.meta.env.VITE_JSONBIN_KEY;
 
 const C = {
