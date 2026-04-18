@@ -170,27 +170,26 @@ export default function RSSDashboard() {
           return;
         }
         if (source.url.includes("substack.com")) {
-          // Fetch Substack RSS directly — rss2json strips enclosure images and
-          // often fails on Substack's feed, so we parse the XML ourselves.
+          // Fetch Substack RSS via server-side proxy — Substack blocks rss2json
+          // and direct browser fetches fail due to CORS.
           const xmlRes = await fetch(`/.netlify/functions/rss-proxy?url=${encodeURIComponent(source.url)}`);
           if (!xmlRes.ok) return;
           const xmlText = await xmlRes.text();
           const doc = new DOMParser().parseFromString(xmlText, "text/xml");
-          const items = Array.from(doc.querySelectorAll("item")).slice(0, 8);
+          // Bail out if the XML parser returned an error document
+          if (doc.querySelector("parsererror")) return;
+          // Use getElementsByTagName — more reliable than querySelector for XML docs
+          const getText = (el, tag) => el.getElementsByTagName(tag)[0]?.textContent?.trim() || "";
+          const items = Array.from(doc.getElementsByTagName("item")).slice(0, 8);
           items.forEach(item => {
-            const link = item.querySelector("link")?.textContent?.trim()
-              || item.querySelector("guid")?.textContent?.trim() || "";
-            const title = item.querySelector("title")?.textContent?.trim() || "";
-            const pubDate = item.querySelector("pubDate")?.textContent?.trim() || "";
-            const rawDesc = item.querySelector("description")?.textContent?.trim() || "";
+            const link = getText(item, "link") || getText(item, "guid");
+            const title = getText(item, "title");
+            const pubDate = getText(item, "pubDate");
+            const rawDesc = getText(item, "description");
             const description = rawDesc.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim().slice(0, 160);
-            // Substack puts the full-size image in <enclosure> or <media:content>
-            const enclosure = item.querySelector("enclosure");
-            const mediaContent = item.querySelector("content");
-            const thumbnail =
-              enclosure?.getAttribute("url") ||
-              mediaContent?.getAttribute("url") ||
-              null;
+            // Substack puts the hero image in <enclosure url="...">
+            const enclosure = item.getElementsByTagName("enclosure")[0];
+            const thumbnail = enclosure?.getAttribute("url") || null;
             results.push({
               id: link || `${source.id}-${Date.now()}-${Math.random()}`,
               title,
