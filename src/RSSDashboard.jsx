@@ -169,6 +169,43 @@ export default function RSSDashboard() {
           });
           return;
         }
+        if (source.url.includes("substack.com")) {
+          // Fetch Substack RSS directly — rss2json strips enclosure images and
+          // often fails on Substack's feed, so we parse the XML ourselves.
+          const xmlRes = await fetch(source.url);
+          if (!xmlRes.ok) return;
+          const xmlText = await xmlRes.text();
+          const doc = new DOMParser().parseFromString(xmlText, "text/xml");
+          const items = Array.from(doc.querySelectorAll("item")).slice(0, 8);
+          items.forEach(item => {
+            const link = item.querySelector("link")?.textContent?.trim()
+              || item.querySelector("guid")?.textContent?.trim() || "";
+            const title = item.querySelector("title")?.textContent?.trim() || "";
+            const pubDate = item.querySelector("pubDate")?.textContent?.trim() || "";
+            const rawDesc = item.querySelector("description")?.textContent?.trim() || "";
+            const description = rawDesc.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim().slice(0, 160);
+            // Substack puts the full-size image in <enclosure> or <media:content>
+            const enclosure = item.querySelector("enclosure");
+            const mediaContent = item.querySelector("content");
+            const thumbnail =
+              enclosure?.getAttribute("url") ||
+              mediaContent?.getAttribute("url") ||
+              null;
+            results.push({
+              id: link || `${source.id}-${Date.now()}-${Math.random()}`,
+              title,
+              link,
+              pubDate,
+              description,
+              image: thumbnail,
+              ytId: null,
+              source: source.name,
+              category: source.category,
+            });
+          });
+          return;
+        }
+
         const res = await fetch(`${RSS2JSON}${encodeURIComponent(source.url)}&count=8`);
         const data = await res.json();
         if (!data.items) return;
