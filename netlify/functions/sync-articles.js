@@ -10,8 +10,9 @@
 
 exports.handler = async (event) => {
   // Read env vars inside the handler so they are always fresh.
-  const JSONBIN_ID  = process.env.VITE_JSONBIN_ID  || "69ce762aaaba882197bac5e8";
-  const JSONBIN_KEY = process.env.VITE_JSONBIN_KEY;
+  // .trim() prevents issues with accidental trailing whitespace/newlines from Netlify UI paste.
+  const JSONBIN_ID  = (process.env.VITE_JSONBIN_ID  || "69ce762aaaba882197bac5e8").trim();
+  const JSONBIN_KEY = (process.env.VITE_JSONBIN_KEY || "").trim();
 
   // Allow CORS pre-flight from any origin (e.g. local dev)
   const corsHeaders = {
@@ -36,6 +37,8 @@ exports.handler = async (event) => {
     };
   }
 
+  console.log(`[sync-articles] key length=${JSONBIN_KEY.length} bin=${JSONBIN_ID}`);
+
   let payload;
   try {
     payload = JSON.parse(event.body);
@@ -47,6 +50,9 @@ exports.handler = async (event) => {
     };
   }
 
+  const bodyStr = JSON.stringify(payload);
+  console.log(`[sync-articles] payload bytes=${bodyStr.length}`);
+
   const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_ID}`, {
     method: "PUT",
     headers: {
@@ -54,7 +60,7 @@ exports.handler = async (event) => {
       "X-Master-Key": JSONBIN_KEY,
       "X-Bin-Versioning": "false",
     },
-    body: JSON.stringify(payload),
+    body: bodyStr,
   });
 
   const text = await res.text();
