@@ -11,7 +11,7 @@ const COLORS = {
   hero: "#1a0a0d",
 };
 
-const RSS2JSON = `https://api.rss2json.com/v1/api.json?api_key=${import.meta.env.VITE_RSS2JSON_API_KEY}&rss_url=`;
+const RSS2JSON = `https://api.rss2json.com/v1/api.json?api_key=${import.meta.env.VITE_RSS2JSON_API_KEY || "exemphyhi6xvldxk8dmrtjpdrxxfrr2o0nnoau54"}&rss_url=`;
 
 function getYTId(url) {
   if (!url) return null;

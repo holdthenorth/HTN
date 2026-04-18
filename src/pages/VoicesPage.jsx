@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 
 const JSONBIN_ID = import.meta.env.VITE_JSONBIN_ID || "69ce762aaaba882197bac5e8";
 const JSONBIN_KEY = import.meta.env.VITE_JSONBIN_KEY;
-const RSS2JSON = `https://api.rss2json.com/v1/api.json?api_key=${import.meta.env.VITE_RSS2JSON_API_KEY}&rss_url=`;
+const RSS2JSON = `https://api.rss2json.com/v1/api.json?api_key=${import.meta.env.VITE_RSS2JSON_API_KEY || "exemphyhi6xvldxk8dmrtjpdrxxfrr2o0nnoau54"}&rss_url=`;
 
 const C = {
   navy:      "#0D1117",
