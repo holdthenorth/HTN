@@ -299,8 +299,16 @@ export default function RSSDashboard() {
 
       if (toAdd.length === 0) return; // nothing new — no write needed
 
-      // Curated articles stay first; new ones are appended at the end.
-      const merged = [...existing, ...toAdd];
+      // Merge then sort newest-first so the frontend always shows recent articles
+      // at the top regardless of when they were added to JSONBin.
+      const merged = [...existing, ...toAdd].sort((a, b) => {
+        const da = parseDate(a.pubDate);
+        const db = parseDate(b.pubDate);
+        if (!da && !db) return 0;
+        if (!da) return 1;
+        if (!db) return -1;
+        return db - da;
+      });
 
       // Use putToJsonBin so the write goes through the serverless proxy.
       await putToJsonBin(merged, data.record?.voices || [], data.record?.pitchPosts || []);
