@@ -248,16 +248,14 @@ export default function RSSDashboard() {
   }
 
   async function putToJsonBin(articles, voicesList, posts) {
-    const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_ID}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Master-Key": JSONBIN_KEY,
-        "X-Bin-Versioning": "false",
-      },
+    // POST to the Netlify serverless function which holds the master key
+    // and calls JSONBin server-side, bypassing the free-plan browser PUT block.
+    const res = await fetch("/.netlify/functions/sync-articles", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ articles, voices: voicesList, pitchPosts: posts }),
     });
-    if (!res.ok) throw new Error();
+    if (!res.ok) throw new Error(`sync-articles ${res.status}`);
   }
 
   function normCatId(cat) {
@@ -304,22 +302,8 @@ export default function RSSDashboard() {
       // Curated articles stay first; new ones are appended at the end.
       const merged = [...existing, ...toAdd];
 
-      // Re-use the voices/pitchPosts from the same read response so there is
-      // no second fetch and no race condition with the component-state load.
-      const writeRes = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_ID}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Master-Key": JSONBIN_KEY,
-          "X-Bin-Versioning": "false",
-        },
-        body: JSON.stringify({
-          articles: merged,
-          voices: data.record?.voices || [],
-          pitchPosts: data.record?.pitchPosts || [],
-        }),
-      });
-      if (!writeRes.ok) throw new Error(`PUT ${writeRes.status}`);
+      // Use putToJsonBin so the write goes through the serverless proxy.
+      await putToJsonBin(merged, data.record?.voices || [], data.record?.pitchPosts || []);
       console.log(`[HTN sync] +${toAdd.length} new articles appended (total: ${merged.length})`);
     } catch (err) {
       console.warn("[HTN sync] skipped:", err.message);
