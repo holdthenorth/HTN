@@ -129,8 +129,6 @@ export default function RSSDashboard() {
 
   useEffect(() => {
     if (!authed) return;
-    fetchAll();
-    // Load voices + pitch posts from JSONBin
     fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_ID}/latest`, {
       headers: { "X-Master-Key": JSONBIN_KEY },
     })
@@ -141,6 +139,11 @@ export default function RSSDashboard() {
       })
       .catch(() => {});
   }, [authed]);
+
+  useEffect(() => {
+    if (!authed) return;
+    fetchAll();
+  }, [authed, customSources]);
 
   async function fetchAll() {
     setLoading(true);
