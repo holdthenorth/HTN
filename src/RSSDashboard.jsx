@@ -250,7 +250,11 @@ export default function RSSDashboard() {
   async function putToJsonBin(articles, voicesList, posts) {
     const res = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_ID}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json", "X-Master-Key": JSONBIN_KEY },
+      headers: {
+        "Content-Type": "application/json",
+        "X-Master-Key": JSONBIN_KEY,
+        "X-Bin-Versioning": "false",
+      },
       body: JSON.stringify({ articles, voices: voicesList, pitchPosts: posts }),
     });
     if (!res.ok) throw new Error();
@@ -304,7 +308,11 @@ export default function RSSDashboard() {
       // no second fetch and no race condition with the component-state load.
       const writeRes = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_ID}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json", "X-Master-Key": JSONBIN_KEY },
+        headers: {
+          "Content-Type": "application/json",
+          "X-Master-Key": JSONBIN_KEY,
+          "X-Bin-Versioning": "false",
+        },
         body: JSON.stringify({
           articles: merged,
           voices: data.record?.voices || [],
