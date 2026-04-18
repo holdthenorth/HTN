@@ -50,6 +50,18 @@ exports.handler = async (event) => {
     };
   }
 
+  // Drop articles older than 10 days to keep the JSONBin payload small.
+  if (Array.isArray(payload.articles)) {
+    const cutoff = Date.now() - 10 * 24 * 60 * 60 * 1000;
+    const before = payload.articles.length;
+    payload.articles = payload.articles.filter(a => {
+      if (!a.pubDate) return true; // no date — keep
+      const d = new Date(a.pubDate);
+      return isNaN(d.getTime()) || d.getTime() >= cutoff;
+    });
+    console.log(`[sync-articles] articles: ${before} → ${payload.articles.length} (10-day filter)`);
+  }
+
   const bodyStr = JSON.stringify(payload);
   console.log(`[sync-articles] payload bytes=${bodyStr.length}`);
 

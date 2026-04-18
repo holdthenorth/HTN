@@ -292,8 +292,11 @@ export default function RSSDashboard() {
         if (a.link) existingKeys.add(a.link);
       });
 
+      const cutoff = Date.now() - 10 * 24 * 60 * 60 * 1000;
+
       const toAdd = freshArticles
         .filter(a => !existingKeys.has(a.id) && !existingKeys.has(a.link))
+        .filter(a => { const d = parseDate(a.pubDate); return !d || d.getTime() >= cutoff; })
         .map(a => ({
           ...a,
           curatorNote: "",
@@ -302,9 +305,10 @@ export default function RSSDashboard() {
 
       if (toAdd.length === 0) return; // nothing new — no write needed
 
-      // Merge then sort newest-first so the frontend always shows recent articles
-      // at the top regardless of when they were added to JSONBin.
-      const merged = [...existing, ...toAdd].sort((a, b) => {
+      // Merge, drop articles older than 10 days, then sort newest-first.
+      const merged = [...existing, ...toAdd]
+        .filter(a => { const d = parseDate(a.pubDate); return !d || d.getTime() >= cutoff; })
+        .sort((a, b) => {
         const da = parseDate(a.pubDate);
         const db = parseDate(b.pubDate);
         if (!da && !db) return 0;
