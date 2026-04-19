@@ -1,20 +1,20 @@
-export const handler = async function (event) {
-  const corsHeaders = {
+exports.handler = async function (event) {
+  const cors = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
   };
 
   if (event.httpMethod === "OPTIONS") {
-    return { statusCode: 204, headers: corsHeaders, body: "" };
+    return { statusCode: 204, headers: cors, body: "" };
   }
 
-  const feedUrl = event.queryStringParameters?.url;
+  const feedUrl = (event.queryStringParameters || {}).url;
 
   if (!feedUrl) {
     return {
       statusCode: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...cors, "Content-Type": "application/json" },
       body: JSON.stringify({ error: "Missing url parameter" }),
     };
   }
@@ -22,7 +22,7 @@ export const handler = async function (event) {
   if (!feedUrl.startsWith("http://") && !feedUrl.startsWith("https://")) {
     return {
       statusCode: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...cors, "Content-Type": "application/json" },
       body: JSON.stringify({ error: "Only http/https URLs are allowed" }),
     };
   }
@@ -35,28 +35,29 @@ export const handler = async function (event) {
       },
     });
 
+    const text = await response.text();
+
     if (!response.ok) {
       return {
         statusCode: response.status,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        body: JSON.stringify({ error: `Feed returned ${response.status}` }),
+        headers: { ...cors, "Content-Type": "application/json" },
+        body: JSON.stringify({ error: `Feed returned ${response.status}`, detail: text }),
       };
     }
 
-    const text = await response.text();
     return {
       statusCode: 200,
       headers: {
-        ...corsHeaders,
+        ...cors,
         "Content-Type": "application/xml; charset=utf-8",
-        "Cache-Control": "public, max-age=60",
+        "Cache-Control": "no-store",
       },
       body: text,
     };
   } catch (err) {
     return {
       statusCode: 502,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...cors, "Content-Type": "application/json" },
       body: JSON.stringify({ error: "Upstream fetch failed", detail: err.message }),
     };
   }
