@@ -11,7 +11,6 @@ const COLORS = {
   hero: "#1a0a0d",
 };
 
-const RSS2JSON = `https://api.rss2json.com/v1/api.json?api_key=${import.meta.env.VITE_RSS2JSON_API_KEY || "exemphyhi6xvldxk8dmrtjpdrxxfrr2o0nnoau54"}&rss_url=`;
 
 function getYTId(url) {
   if (!url) return null;
@@ -85,6 +84,67 @@ function timeAgo(dateStr) {
   return `${Math.floor(diff / 1440)}d ago`;
 }
 
+function sortAndDedup(arr) {
+  const seen = new Set();
+  return arr
+    .slice()
+    .sort((a, b) => {
+      const da = parseDate(a.pubDate);
+      const db = parseDate(b.pubDate);
+      if (!da && !db) return 0;
+      if (!da) return 1;
+      if (!db) return -1;
+      return db - da;
+    })
+    .filter(a => {
+      if (seen.has(a.id)) return false;
+      seen.add(a.id);
+      return true;
+    });
+}
+
+async function fetchSource(source) {
+  const items = [];
+  try {
+    const sourceYtId = getYTId(source.url);
+    if (sourceYtId) {
+      const res = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(source.url)}&format=json`);
+      if (!res.ok) return items;
+      const data = await res.json();
+      items.push({ id: source.url, title: data.title || source.name, link: source.url, pubDate: "", description: data.author_name ? `YouTube · ${data.author_name}` : "YouTube", image: data.thumbnail_url || `https://img.youtube.com/vi/${sourceYtId}/hqdefault.jpg`, ytId: sourceYtId, source: source.name, category: source.category });
+      return items;
+    }
+    if (source.url.includes("substack.com")) {
+      const xmlRes = await fetch(`/.netlify/functions/rss-proxy?url=${encodeURIComponent(source.url)}`);
+      if (!xmlRes.ok) return items;
+      const xmlText = await xmlRes.text();
+      const doc = new DOMParser().parseFromString(xmlText, "text/xml");
+      if (doc.querySelector("parsererror")) return items;
+      const getText = (el, tag) => el.getElementsByTagName(tag)[0]?.textContent?.trim() || "";
+      Array.from(doc.getElementsByTagName("item")).slice(0, 8).forEach(item => {
+        const link = getText(item, "link") || getText(item, "guid");
+        const rawDesc = getText(item, "description");
+        const enclosure = item.getElementsByTagName("enclosure")[0];
+        items.push({ id: link || `${source.id}-${Date.now()}-${Math.random()}`, title: getText(item, "title"), link, pubDate: getText(item, "pubDate"), description: rawDesc.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim().slice(0, 160), image: enclosure?.getAttribute("url") || null, ytId: null, source: source.name, category: source.category });
+      });
+      return items;
+    }
+    const RSS2JSON_URL = `https://api.rss2json.com/v1/api.json?api_key=${import.meta.env.VITE_RSS2JSON_API_KEY || "exemphyhi6xvldxk8dmrtjpdrxxfrr2o0nnoau54"}&rss_url=`;
+    const res = await fetch(`${RSS2JSON_URL}${encodeURIComponent(source.url)}&count=8`);
+    const data = await res.json();
+    if (!data.items) return items;
+    data.items.forEach(item => {
+      if (!item) return;
+      const link = item.link || item.guid || item.id || "";
+      const ytId = getYTId(link);
+      const image = (typeof item.thumbnail === "string" && item.thumbnail) || (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : null);
+      const rawDesc = typeof item.description === "string" ? item.description : "";
+      items.push({ id: link || `${source.id}-${Date.now()}-${Math.random()}`, title: item.title || "", link, pubDate: item.pubDate || "", description: rawDesc.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim().slice(0, 160) || "", image, ytId: ytId || null, source: source.name, category: source.category });
+    });
+  } catch {}
+  return items;
+}
+
 const PASSWORD = "holdthenorth2026";
 
 export default function RSSDashboard() {
@@ -145,108 +205,43 @@ export default function RSSDashboard() {
     fetchAll();
   }, [authed, customSources]);
 
-  async function fetchAll() {
-    setLoading(true);
-    const results = [];
-    await Promise.all(allSources.map(async (source) => {
-      try {
-        const sourceYtId = getYTId(source.url);
-        if (sourceYtId) {
-          // Single YouTube video URL — fetch via oEmbed (no API key needed)
-          const res = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(source.url)}&format=json`);
-          if (!res.ok) return;
-          const data = await res.json();
-          results.push({
-            id: source.url,
-            title: data.title || source.name,
-            link: source.url,
-            pubDate: "",
-            description: data.author_name ? `YouTube · ${data.author_name}` : "YouTube",
-            image: data.thumbnail_url || `https://img.youtube.com/vi/${sourceYtId}/hqdefault.jpg`,
-            ytId: sourceYtId,
-            source: source.name,
-            category: source.category,
-          });
-          return;
-        }
-        if (source.url.includes("substack.com")) {
-          // Fetch Substack RSS via server-side proxy — Substack blocks rss2json
-          // and direct browser fetches fail due to CORS.
-          const xmlRes = await fetch(`/.netlify/functions/rss-proxy?url=${encodeURIComponent(source.url)}`);
-          if (!xmlRes.ok) return;
-          const xmlText = await xmlRes.text();
-          const doc = new DOMParser().parseFromString(xmlText, "text/xml");
-          // Bail out if the XML parser returned an error document
-          if (doc.querySelector("parsererror")) return;
-          // Use getElementsByTagName — more reliable than querySelector for XML docs
-          const getText = (el, tag) => el.getElementsByTagName(tag)[0]?.textContent?.trim() || "";
-          const items = Array.from(doc.getElementsByTagName("item")).slice(0, 8);
-          items.forEach(item => {
-            const link = getText(item, "link") || getText(item, "guid");
-            const title = getText(item, "title");
-            const pubDate = getText(item, "pubDate");
-            const rawDesc = getText(item, "description");
-            const description = rawDesc.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim().slice(0, 160);
-            // Substack puts the hero image in <enclosure url="...">
-            const enclosure = item.getElementsByTagName("enclosure")[0];
-            const thumbnail = enclosure?.getAttribute("url") || null;
-            results.push({
-              id: link || `${source.id}-${Date.now()}-${Math.random()}`,
-              title,
-              link,
-              pubDate,
-              description,
-              image: thumbnail,
-              ytId: null,
-              source: source.name,
-              category: source.category,
-            });
-          });
-          return;
-        }
+  async function fetchAll(force = false) {
+    // Build initial display from per-source sessionStorage cache for instant render
+    const sourceResults = new Map();
+    if (!force) {
+      allSources.forEach(source => {
+        try {
+          const c = sessionStorage.getItem(`htn-feed-${source.id}`);
+          if (c) sourceResults.set(source.id, JSON.parse(c));
+        } catch {}
+      });
+    }
 
-        const res = await fetch(`${RSS2JSON}${encodeURIComponent(source.url)}&count=8`);
-        const data = await res.json();
-        if (!data.items) return;
-        data.items.forEach(item => {
-          if (!item) return;
-          const link = item.link || item.guid || item.id || "";
-          const ytId = getYTId(link);
-          const image = (typeof item.thumbnail === "string" && item.thumbnail) || (ytId ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg` : null);
-          const rawDesc = typeof item.description === "string" ? item.description : "";
-          const description = rawDesc.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim().slice(0, 160) || "";
-          results.push({
-            id: link || `${source.id}-${Date.now()}-${Math.random()}`,
-            title: item.title || "",
-            link,
-            pubDate: item.pubDate || "",
-            description,
-            image,
-            ytId: ytId || null,
-            source: source.name,
-            category: source.category,
-          });
-        });
-      } catch {}
-    }));
-    results.sort((a, b) => {
-      const da = parseDate(a.pubDate);
-      const db = parseDate(b.pubDate);
-      if (!da && !db) return 0;
-      if (!da) return 1;
-      if (!db) return -1;
-      return db - da;
-    });
-    // Deduplicate by article ID (which is the link URL) — same story can appear in multiple feeds
-    const seen = new Set();
-    const deduped = results.filter(a => {
-      if (seen.has(a.id)) return false;
-      seen.add(a.id);
-      return true;
-    });
-    setArticles(deduped);
-    setLoading(false);
-    autoSyncNewArticles(deduped);
+    const hasCached = sourceResults.size > 0;
+    if (hasCached) {
+      setArticles(sortAndDedup([...sourceResults.values()].flat()));
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
+
+    // Fetch in batches of 6, rendering progressively after each batch
+    const BATCH = 6;
+    let skeletonDismissed = hasCached;
+    for (let i = 0; i < allSources.length; i += BATCH) {
+      if (i > 0) await new Promise(r => setTimeout(r, 300));
+      const batch = allSources.slice(i, i + BATCH);
+      await Promise.all(batch.map(async source => {
+        const items = await fetchSource(source);
+        sourceResults.set(source.id, items);
+        try { sessionStorage.setItem(`htn-feed-${source.id}`, JSON.stringify(items)); } catch {}
+      }));
+      const merged = sortAndDedup([...sourceResults.values()].flat());
+      setArticles(merged);
+      if (!skeletonDismissed) { setLoading(false); skeletonDismissed = true; }
+    }
+
+    autoSyncNewArticles(sortAndDedup([...sourceResults.values()].flat()));
   }
 
   function removeFeatured(id) {
@@ -517,7 +512,7 @@ export default function RSSDashboard() {
           <button onClick={saveFeatured} disabled={saveStatus === "saving" || (featured.length === 0 && !heroId)} style={{ background: "#1a4a1a", color: "#4caf50", border: "1px solid #4caf50", borderRadius: "4px", padding: "0.5rem 1.2rem", fontSize: "0.85rem", fontWeight: 700, cursor: "pointer", letterSpacing: "0.08em", opacity: (saveStatus === "saving" || (featured.length === 0 && !heroId)) ? 0.5 : 1 }}>
             {saveStatus === "saving" ? "⟳ PUSHING..." : "↑ PUSH TO SITE"}
           </button>
-          <button onClick={fetchAll} disabled={loading} style={{ background: COLORS.red, color: COLORS.white, border: "none", borderRadius: "4px", padding: "0.5rem 1.2rem", fontSize: "0.85rem", fontWeight: 700, cursor: loading ? "not-allowed" : "pointer", letterSpacing: "0.08em", opacity: loading ? 0.7 : 1 }}>
+          <button onClick={() => fetchAll(true)} disabled={loading} style={{ background: COLORS.red, color: COLORS.white, border: "none", borderRadius: "4px", padding: "0.5rem 1.2rem", fontSize: "0.85rem", fontWeight: 700, cursor: loading ? "not-allowed" : "pointer", letterSpacing: "0.08em", opacity: loading ? 0.7 : 1 }}>
             {loading ? "⟳ LOADING..." : "↻ REFRESH"}
           </button>
         </div>
