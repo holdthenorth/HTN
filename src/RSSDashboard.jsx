@@ -23,6 +23,7 @@ function getYTId(url) {
 }
 const JSONBIN_ID = import.meta.env.VITE_JSONBIN_ID || "69ce762aaaba882197bac5e8";
 const JSONBIN_KEY = import.meta.env.VITE_JSONBIN_KEY;
+const RSS_CACHE_BIN_ID = import.meta.env.VITE_RSS_CACHE_BIN_ID;
 
 const ARTICLE_CATEGORIES = [
   { id: "politics",     label: "Politics" },
@@ -206,28 +207,44 @@ export default function RSSDashboard() {
   }, [authed, customSources]);
 
   async function fetchAll(force = false) {
-    // Build initial display from per-source sessionStorage cache for instant render
-    const sourceResults = new Map();
-    if (!force) {
-      allSources.forEach(source => {
-        try {
-          const c = sessionStorage.getItem(`htn-feed-${source.id}`);
-          if (c) sourceResults.set(source.id, JSON.parse(c));
-        } catch {}
-      });
-    }
+    // Normal load: single JSONBin read (~200ms) instead of 16 rss2json calls
+    if (!force && RSS_CACHE_BIN_ID) {
+      // Show sessionStorage snapshot instantly while the bin fetch is in flight
+      try {
+        const snap = sessionStorage.getItem("htn-rss-cache");
+        if (snap) { setArticles(JSON.parse(snap)); setLoading(false); }
+      } catch {}
 
-    const hasCached = sourceResults.size > 0;
-    if (hasCached) {
-      setArticles(sortAndDedup([...sourceResults.values()].flat()));
+      let cachedArticles = [];
+      try {
+        const res = await fetch(`https://api.jsonbin.io/v3/b/${RSS_CACHE_BIN_ID}/latest`, {
+          headers: { "X-Master-Key": JSONBIN_KEY },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          cachedArticles = data.record?.articles || [];
+          if (cachedArticles.length > 0) {
+            sessionStorage.setItem("htn-rss-cache", JSON.stringify(cachedArticles));
+            setArticles(cachedArticles);
+          }
+        }
+      } catch {}
+
+      // Merge in any custom sources (not in the shared cache)
+      if (customSources.length > 0) {
+        const customItems = (await Promise.all(customSources.map(s => fetchSource(s)))).flat();
+        if (customItems.length > 0) setArticles(sortAndDedup([...cachedArticles, ...customItems]));
+      }
+
       setLoading(false);
-    } else {
-      setLoading(true);
+      return;
     }
 
-    // Fetch in batches of 3, update state once per batch
+    // Manual refresh (force=true) or no cache bin configured: fetch live from rss2json
+    const sourceResults = new Map();
+    setLoading(true);
     const BATCH = 3;
-    let skeletonDismissed = hasCached;
+    let skeletonDismissed = false;
     for (let i = 0; i < allSources.length; i += BATCH) {
       if (i > 0) await new Promise(r => setTimeout(r, 100));
       const batch = allSources.slice(i, i + BATCH);

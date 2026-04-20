@@ -6,6 +6,10 @@
 [build.environment]
   NODE_VERSION = "22.12.0"
 
+# Scheduled functions
+[functions."refresh-rss-cache"]
+  schedule = "*/30 * * * *"
+
 # Edge functions
 [[edge_functions]]
   path     = "/story/*"
