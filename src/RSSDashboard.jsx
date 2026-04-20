@@ -225,20 +225,19 @@ export default function RSSDashboard() {
       setLoading(true);
     }
 
-    // Fetch in batches of 6, rendering progressively after each batch
+    // Fetch in batches of 6; each feed renders individually as it resolves
     const BATCH = 6;
     let skeletonDismissed = hasCached;
     for (let i = 0; i < allSources.length; i += BATCH) {
       if (i > 0) await new Promise(r => setTimeout(r, 300));
       const batch = allSources.slice(i, i + BATCH);
-      await Promise.all(batch.map(async source => {
+      await Promise.allSettled(batch.map(async source => {
         const items = await fetchSource(source);
         sourceResults.set(source.id, items);
         try { sessionStorage.setItem(`htn-feed-${source.id}`, JSON.stringify(items)); } catch {}
+        setArticles(sortAndDedup([...sourceResults.values()].flat()));
+        if (!skeletonDismissed) { setLoading(false); skeletonDismissed = true; }
       }));
-      const merged = sortAndDedup([...sourceResults.values()].flat());
-      setArticles(merged);
-      if (!skeletonDismissed) { setLoading(false); skeletonDismissed = true; }
     }
 
     autoSyncNewArticles(sortAndDedup([...sourceResults.values()].flat()));
