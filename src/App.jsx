@@ -219,11 +219,7 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
   const [feedLoading, setFeedLoading] = useState(() => !sessionStorage.getItem("htn-curated-cache"));
 
   useEffect(() => {
-    const hasArticles = sessionStorage.getItem("htn-curated-cache");
-    const hasVoices = sessionStorage.getItem("htn-voices-cache");
-    const hasPitch = sessionStorage.getItem("htn-pitch-cache");
-    if (hasArticles && hasVoices && hasPitch) return;
-    // Reuse the already-in-flight promise started at module level
+    // Always fetch in background; serve cached data immediately (stale-while-revalidate)
     getJsonbinData()
       .then(data => {
         const articles = data.record?.articles || [];
@@ -235,7 +231,7 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
         setCurated(articles);
         setFeedLoading(false);
       })
-      .catch(() => { setCurated([]); setFeedLoading(false); });
+      .catch(() => { setFeedLoading(false); });
   }, []);
 
   useEffect(() => { loadItems(); setTimeout(() => setLoaded(true), 80); }, []);
