@@ -380,7 +380,10 @@ export default function RSSDashboard() {
     if (ordered.length === 0) return;
     setSaveStatus("saving");
     try {
-      await putToJsonBin(ordered, voices, pitchPosts);
+      // Always read current voices and pitchPosts fresh from JSONBin to avoid
+      // overwriting them with empty state if this runs before the load effect completes.
+      const current = await fetchCurrentBin();
+      await putToJsonBin(ordered, current.voices || voices, current.pitchPosts || pitchPosts);
       setSaveStatus("ok");
       setTimeout(() => setSaveStatus(null), 3000);
     } catch {
