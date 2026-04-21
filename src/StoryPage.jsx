@@ -152,7 +152,12 @@ export default function StoryPage() {
     const set = (sel, attr, val) => { const el = document.querySelector(sel); if (el) el.setAttribute(attr, val); };
 
     document.title = `${article.title} — Hold the North`;
-    set('meta[name="description"]',          "content", desc);
+    set('meta[name="description"]',          "content", article.metaDescription || desc);
+    if (article.keywords) {
+      let kw = document.querySelector('meta[name="keywords"]');
+      if (!kw) { kw = document.createElement("meta"); kw.setAttribute("name", "keywords"); document.head.appendChild(kw); }
+      kw.setAttribute("content", article.keywords);
+    }
     set('meta[property="og:title"]',         "content", article.title);
     set('meta[property="og:description"]',   "content", desc);
     set('meta[property="og:url"]',           "content", canonicalUrl);

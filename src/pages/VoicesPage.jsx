@@ -38,6 +38,25 @@ export default function VoicesPage() {
   const [feedData, setFeedData] = useState({});
 
   useEffect(() => {
+    if (voices.length === 0) return;
+    const prevTitle = document.title;
+    const prevDesc = document.querySelector('meta[name="description"]')?.getAttribute("content") || "";
+    document.title = "Voices — Hold the North";
+    const setMeta = (sel, val) => { const el = document.querySelector(sel); if (el) el.setAttribute("content", val); };
+    setMeta('meta[name="description"]', "Independent Canadian journalists and creators featured by HTN — the writers, reporters, and thinkers doing the work that matters.");
+    const allKeywords = voices.flatMap(v => v.keywords ? v.keywords.split(",").map(k => k.trim()).filter(Boolean) : []);
+    if (allKeywords.length > 0) {
+      let kw = document.querySelector('meta[name="keywords"]');
+      if (!kw) { kw = document.createElement("meta"); kw.setAttribute("name", "keywords"); document.head.appendChild(kw); }
+      kw.setAttribute("content", allKeywords.join(", "));
+    }
+    return () => {
+      document.title = prevTitle;
+      setMeta('meta[name="description"]', prevDesc);
+    };
+  }, [voices]);
+
+  useEffect(() => {
     if (sessionStorage.getItem("htn-voices-cache")) return;
     fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_ID}/latest`, {
       headers: { "X-Master-Key": JSONBIN_KEY },
@@ -129,7 +148,7 @@ export default function VoicesPage() {
                     {/* Photo + name row */}
                     <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "0.9rem" }}>
                       {voice.photo ? (
-                        <img src={voice.photo} alt={voice.name} onError={e => { e.target.style.display = "none"; }}
+                        <img src={voice.photo} alt={voice.photoAlt || voice.name} onError={e => { e.target.style.display = "none"; }}
                           style={{ width: 56, height: 56, borderRadius: "50%", objectFit: "cover", flexShrink: 0, border: `2px solid ${C.border}` }} />
                       ) : (
                         <div style={{ width: 56, height: 56, borderRadius: "50%", background: C.navyMid, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", color: C.grey, fontSize: "1.4rem", border: `2px solid ${C.border}` }}>👤</div>
@@ -164,7 +183,7 @@ export default function VoicesPage() {
               <div style={{ background: C.navyLight, border: `1px solid ${C.border}`, borderTop: `3px solid ${C.red}`, borderRadius: "6px", padding: "1.5rem 1.75rem", marginBottom: "1rem" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.25rem" }}>
                   {expandedVoice.photo && (
-                    <img src={expandedVoice.photo} alt="" style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover" }} />
+                    <img src={expandedVoice.photo} alt={expandedVoice.photoAlt || expandedVoice.name} style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover" }} />
                   )}
                   <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, fontSize: "0.8rem", letterSpacing: "0.1em", color: C.white, textTransform: "uppercase" }}>
                     Latest from {expandedVoice.name}

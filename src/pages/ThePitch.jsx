@@ -103,7 +103,7 @@ export function ThePitchIndex() {
             {posts.map(post => (
               <Link key={post.id} to={`/the-pitch/${post.slug}`} className="tp-card">
                 {post.photo && (
-                  <img src={post.photo} alt="" onError={e => e.target.style.display = "none"}
+                  <img src={post.photo} alt={post.photoAlt || post.title} onError={e => e.target.style.display = "none"}
                     style={{ width: "100%", height: 200, objectFit: "cover", display: "block" }} />
                 )}
                 <div style={{ padding: "1.1rem", display: "flex", flexDirection: "column", gap: "0.5rem", flex: 1 }}>
@@ -142,6 +142,25 @@ export function ThePitchPost() {
   const { slug } = useParams();
   const { posts, loading } = usePitchPosts();
   const post = posts.find(p => p.slug === slug);
+
+  useEffect(() => {
+    if (!post) return;
+    const prevTitle = document.title;
+    const prevDesc = document.querySelector('meta[name="description"]')?.getAttribute("content") || "";
+    const setMeta = (sel, val) => { const el = document.querySelector(sel); if (el) el.setAttribute("content", val); };
+    document.title = `${post.title} — The Pitch — Hold the North`;
+    const desc = post.metaDescription || post.body?.replace(/\*\*?(.+?)\*\*?|\[([^\]]+)\]\([^)]+\)/g, "$1$2").replace(/\n+/g, " ").trim().slice(0, 160) || "";
+    setMeta('meta[name="description"]', desc);
+    if (post.keywords) {
+      let kw = document.querySelector('meta[name="keywords"]');
+      if (!kw) { kw = document.createElement("meta"); kw.setAttribute("name", "keywords"); document.head.appendChild(kw); }
+      kw.setAttribute("content", post.keywords);
+    }
+    return () => {
+      document.title = prevTitle;
+      setMeta('meta[name="description"]', prevDesc);
+    };
+  }, [post]);
 
   return (
     <div style={{ minHeight: "100vh", background: C.navy, color: C.offWhite, fontFamily: "Georgia, serif" }}>
@@ -188,7 +207,7 @@ export function ThePitchPost() {
 
             {/* Hero photo */}
             {post.photo && (
-              <img src={post.photo} alt="" onError={e => e.target.style.display = "none"}
+              <img src={post.photo} alt={post.photoAlt || post.title} onError={e => e.target.style.display = "none"}
                 style={{ width: "100%", maxHeight: 460, objectFit: "cover", display: "block", borderRadius: "4px", marginBottom: "2rem" }} />
             )}
 

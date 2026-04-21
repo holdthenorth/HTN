@@ -179,12 +179,12 @@ export default function RSSDashboard() {
   const [voices, setVoices] = useState([]);
   const [voiceForm, setVoiceForm] = useState(null); // null = hidden
   const [voiceFormMode, setVoiceFormMode] = useState("add");
-  const EMPTY_VOICE = { id: "", name: "", photo: "", bio: "", whyHTN: "", feedUrl: "" };
+  const EMPTY_VOICE = { id: "", name: "", photo: "", photoAlt: "", bio: "", whyHTN: "", feedUrl: "", metaDescription: "", keywords: "" };
 
   const [pitchPosts, setPitchPosts] = useState([]);
   const [pitchForm, setPitchForm] = useState(null); // null = hidden
   const [pitchFormMode, setPitchFormMode] = useState("add");
-  const EMPTY_PITCH = { id: "", title: "", byline: "", body: "", photo: "" };
+  const EMPTY_PITCH = { id: "", title: "", byline: "", body: "", photo: "", photoAlt: "", metaDescription: "", keywords: "" };
 
   const allSources = [...SOURCES, ...customSources];
 
@@ -274,7 +274,7 @@ export default function RSSDashboard() {
     });
   }
 
-  function confirmFeature(article, note, category) {
+  function confirmFeature(article, note, category, metaDescription, keywords) {
     setFeatured(prev => {
       // Guard against double-featuring the same article
       if (prev.includes(article.id)) return prev;
@@ -283,7 +283,7 @@ export default function RSSDashboard() {
       return updated;
     });
     setNotes(prev => {
-      const updated = { ...prev, [article.id]: { note, category } };
+      const updated = { ...prev, [article.id]: { note, category, metaDescription, keywords } };
       localStorage.setItem("htn-notes", JSON.stringify(updated));
       return updated;
     });
@@ -376,7 +376,7 @@ export default function RSSDashboard() {
     const heroArticle = heroId ? articles.find(a => a.id === heroId) : null;
     const featuredArticles = articles.filter(a => featured.includes(a.id) && a.id !== heroId);
     const ordered = [...(heroArticle ? [heroArticle] : []), ...featuredArticles]
-      .map(a => ({ ...a, curatorNote: notes[a.id]?.note || "", category: normCatId(notes[a.id]?.category || a.category) || "" }));
+      .map(a => ({ ...a, curatorNote: notes[a.id]?.note || "", category: normCatId(notes[a.id]?.category || a.category) || "", metaDescription: notes[a.id]?.metaDescription || "", keywords: notes[a.id]?.keywords || "" }));
     if (ordered.length === 0) return;
     setSaveStatus("saving");
     try {
@@ -581,6 +581,30 @@ export default function RSSDashboard() {
                     style={{ width: "100%", background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: "4px", color: COLORS.white, padding: "0.45rem 0.75rem", fontSize: "0.85rem", fontFamily: "'Barlow Condensed', sans-serif", resize: "vertical", boxSizing: "border-box" }} />
                 </div>
               ))}
+              <div style={{ borderTop: `1px solid ${COLORS.border}`, margin: "0.5rem 0 0.75rem", paddingTop: "0.75rem" }}>
+                <div style={{ fontSize: "0.55rem", letterSpacing: "0.18em", color: COLORS.grey, textTransform: "uppercase", marginBottom: "0.75rem" }}>SEO</div>
+                <div style={{ marginBottom: "0.75rem" }}>
+                  <div style={{ fontSize: "0.6rem", letterSpacing: "0.15em", color: COLORS.grey, textTransform: "uppercase", marginBottom: "0.3rem" }}>Photo Alt Text</div>
+                  <input type="text" value={voiceForm.photoAlt} placeholder="Descriptive alt text for the profile photo…"
+                    onChange={e => setVoiceForm({ ...voiceForm, photoAlt: e.target.value })}
+                    style={{ width: "100%", background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: "4px", color: COLORS.white, padding: "0.45rem 0.75rem", fontSize: "0.85rem", fontFamily: "'Barlow Condensed', sans-serif", boxSizing: "border-box" }} />
+                </div>
+                <div style={{ marginBottom: "0.75rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.3rem" }}>
+                    <div style={{ fontSize: "0.6rem", letterSpacing: "0.15em", color: COLORS.grey, textTransform: "uppercase" }}>Meta Description</div>
+                    <div style={{ fontSize: "0.6rem", color: voiceForm.metaDescription.length > 160 ? COLORS.orange : COLORS.grey }}>{voiceForm.metaDescription.length}/160</div>
+                  </div>
+                  <textarea value={voiceForm.metaDescription} placeholder="SEO description for this voice — shown in Google results…" rows={2} maxLength={160}
+                    onChange={e => setVoiceForm({ ...voiceForm, metaDescription: e.target.value })}
+                    style={{ width: "100%", background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: "4px", color: COLORS.white, padding: "0.45rem 0.75rem", fontSize: "0.85rem", fontFamily: "'Barlow Condensed', sans-serif", resize: "vertical", boxSizing: "border-box" }} />
+                </div>
+                <div>
+                  <div style={{ fontSize: "0.6rem", letterSpacing: "0.15em", color: COLORS.grey, textTransform: "uppercase", marginBottom: "0.3rem" }}>Keywords</div>
+                  <input type="text" value={voiceForm.keywords} placeholder="e.g. Charlie Angus, NDP, Canadian politics"
+                    onChange={e => setVoiceForm({ ...voiceForm, keywords: e.target.value })}
+                    style={{ width: "100%", background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: "4px", color: COLORS.white, padding: "0.45rem 0.75rem", fontSize: "0.85rem", fontFamily: "'Barlow Condensed', sans-serif", boxSizing: "border-box" }} />
+                </div>
+              </div>
               <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
                 <button onClick={() => setVoiceForm(null)} style={{ background: "transparent", color: COLORS.grey, border: `1px solid ${COLORS.border}`, borderRadius: "4px", padding: "0.45rem 1rem", cursor: "pointer", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.8rem", letterSpacing: "0.06em" }}>CANCEL</button>
                 <button onClick={addOrUpdateVoice} disabled={!voiceForm.name.trim() || !voiceForm.feedUrl.trim()}
@@ -657,6 +681,31 @@ export default function RSSDashboard() {
                   style={{ width: "100%", background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: "4px", color: COLORS.white, padding: "0.6rem 0.75rem", fontSize: "0.9rem", fontFamily: "Georgia, serif", lineHeight: 1.7, resize: "vertical", boxSizing: "border-box" }} />
                 <div style={{ fontSize: "0.6rem", color: COLORS.grey, marginTop: "0.3rem", letterSpacing: "0.06em" }}>
                   Separate paragraphs with a blank line. Basic markdown: **bold**, *italic*, [text](url)
+                </div>
+              </div>
+
+              <div style={{ borderTop: `1px solid ${COLORS.border}`, paddingTop: "0.75rem", marginBottom: "0.75rem" }}>
+                <div style={{ fontSize: "0.55rem", letterSpacing: "0.18em", color: COLORS.grey, textTransform: "uppercase", marginBottom: "0.75rem" }}>SEO</div>
+                <div style={{ marginBottom: "0.75rem" }}>
+                  <div style={{ fontSize: "0.6rem", letterSpacing: "0.15em", color: COLORS.grey, textTransform: "uppercase", marginBottom: "0.3rem" }}>Photo Alt Text</div>
+                  <input type="text" value={pitchForm.photoAlt} placeholder="Descriptive alt text for the hero image…"
+                    onChange={e => setPitchForm({ ...pitchForm, photoAlt: e.target.value })}
+                    style={{ width: "100%", background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: "4px", color: COLORS.white, padding: "0.45rem 0.75rem", fontSize: "0.88rem", fontFamily: "'Barlow Condensed', sans-serif", boxSizing: "border-box" }} />
+                </div>
+                <div style={{ marginBottom: "0.75rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.3rem" }}>
+                    <div style={{ fontSize: "0.6rem", letterSpacing: "0.15em", color: COLORS.grey, textTransform: "uppercase" }}>Meta Description</div>
+                    <div style={{ fontSize: "0.6rem", color: pitchForm.metaDescription.length > 160 ? COLORS.orange : COLORS.grey }}>{pitchForm.metaDescription.length}/160</div>
+                  </div>
+                  <textarea value={pitchForm.metaDescription} placeholder="SEO description — shown in Google results…" rows={2} maxLength={160}
+                    onChange={e => setPitchForm({ ...pitchForm, metaDescription: e.target.value })}
+                    style={{ width: "100%", background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: "4px", color: COLORS.white, padding: "0.45rem 0.75rem", fontSize: "0.88rem", fontFamily: "'Barlow Condensed', sans-serif", resize: "vertical", boxSizing: "border-box" }} />
+                </div>
+                <div>
+                  <div style={{ fontSize: "0.6rem", letterSpacing: "0.15em", color: COLORS.grey, textTransform: "uppercase", marginBottom: "0.3rem" }}>Keywords</div>
+                  <input type="text" value={pitchForm.keywords} placeholder="e.g. Canadian politics, sovereignty, analysis"
+                    onChange={e => setPitchForm({ ...pitchForm, keywords: e.target.value })}
+                    style={{ width: "100%", background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: "4px", color: COLORS.white, padding: "0.45rem 0.75rem", fontSize: "0.88rem", fontFamily: "'Barlow Condensed', sans-serif", boxSizing: "border-box" }} />
                 </div>
               </div>
 
@@ -823,7 +872,7 @@ export default function RSSDashboard() {
                   <a href={article.link} target="_blank" rel="noreferrer" style={{ color: COLORS.white, textDecoration: "none", fontSize: "0.97rem", fontWeight: 600, lineHeight: 1.3 }}>{article.title}</a>
                   {article.description && <p style={{ color: COLORS.grey, fontSize: "0.78rem", margin: 0, lineHeight: 1.5 }}>{article.description}</p>}
                   <div style={{ marginTop: "auto", paddingTop: "0.5rem", display: "flex", gap: "0.4rem" }}>
-                    <button onClick={() => isFeatured ? removeFeatured(article.id) : setNoteModal({ article, note: notes[article.id]?.note || "", category: notes[article.id]?.category || "politics" })} style={{ flex: 1, background: isFeatured ? COLORS.red : "transparent", color: isFeatured ? COLORS.white : COLORS.grey, border: `1px solid ${isFeatured ? COLORS.red : COLORS.border}`, padding: "0.4rem", borderRadius: "4px", cursor: "pointer", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.78rem", letterSpacing: "0.05em" }}>
+                    <button onClick={() => isFeatured ? removeFeatured(article.id) : setNoteModal({ article, note: notes[article.id]?.note || "", category: notes[article.id]?.category || "politics", metaDescription: notes[article.id]?.metaDescription || "", keywords: notes[article.id]?.keywords || "" })} style={{ flex: 1, background: isFeatured ? COLORS.red : "transparent", color: isFeatured ? COLORS.white : COLORS.grey, border: `1px solid ${isFeatured ? COLORS.red : COLORS.border}`, padding: "0.4rem", borderRadius: "4px", cursor: "pointer", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.78rem", letterSpacing: "0.05em" }}>
                       {isFeatured ? "★ FEATURED" : "☆ FEATURE THIS"}
                     </button>
                     <button onClick={() => toggleHero(article.id)} title={isHero ? "Remove as hero story" : "Set as hero story"} style={{ background: isHero ? COLORS.orange : "transparent", color: isHero ? COLORS.white : COLORS.grey, border: `1px solid ${isHero ? COLORS.orange : COLORS.border}`, padding: "0.4rem 0.65rem", borderRadius: "4px", cursor: "pointer", fontSize: "0.85rem" }}>📌</button>
@@ -859,13 +908,39 @@ export default function RSSDashboard() {
               value={noteModal.note}
               onChange={e => setNoteModal({ ...noteModal, note: e.target.value })}
               placeholder="Why does this story matter? Add context for HTN readers…"
-              style={{ background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: "4px", color: COLORS.white, padding: "0.75rem", fontSize: "0.88rem", fontFamily: "'Barlow Condensed', sans-serif", lineHeight: 1.55, resize: "vertical", minHeight: "120px", outline: "none" }}
+              style={{ background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: "4px", color: COLORS.white, padding: "0.75rem", fontSize: "0.88rem", fontFamily: "'Barlow Condensed', sans-serif", lineHeight: 1.55, resize: "vertical", minHeight: "100px", outline: "none" }}
             />
+            <div style={{ borderTop: `1px solid ${COLORS.border}`, paddingTop: "0.75rem" }}>
+              <div style={{ fontSize: "0.55rem", letterSpacing: "0.18em", color: COLORS.grey, textTransform: "uppercase", marginBottom: "0.65rem" }}>SEO</div>
+              <div style={{ marginBottom: "0.65rem" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.3rem" }}>
+                  <div style={{ fontSize: "0.6rem", letterSpacing: "0.12em", color: COLORS.grey, textTransform: "uppercase", fontFamily: "'Barlow Condensed', sans-serif" }}>Meta Description</div>
+                  <div style={{ fontSize: "0.6rem", color: noteModal.metaDescription.length > 160 ? COLORS.orange : COLORS.grey }}>{noteModal.metaDescription.length}/160</div>
+                </div>
+                <textarea
+                  value={noteModal.metaDescription}
+                  onChange={e => setNoteModal({ ...noteModal, metaDescription: e.target.value })}
+                  placeholder="SEO description for this story — shown in Google results…"
+                  rows={2} maxLength={160}
+                  style={{ width: "100%", background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: "4px", color: COLORS.white, padding: "0.55rem 0.75rem", fontSize: "0.85rem", fontFamily: "'Barlow Condensed', sans-serif", lineHeight: 1.5, resize: "vertical", outline: "none", boxSizing: "border-box" }}
+                />
+              </div>
+              <div>
+                <div style={{ fontSize: "0.6rem", letterSpacing: "0.12em", color: COLORS.grey, textTransform: "uppercase", marginBottom: "0.3rem", fontFamily: "'Barlow Condensed', sans-serif" }}>Keywords</div>
+                <input
+                  type="text"
+                  value={noteModal.keywords}
+                  onChange={e => setNoteModal({ ...noteModal, keywords: e.target.value })}
+                  placeholder="e.g. Charlie Angus, NDP, Canadian politics"
+                  style={{ width: "100%", background: COLORS.bg, border: `1px solid ${COLORS.border}`, borderRadius: "4px", color: COLORS.white, padding: "0.55rem 0.75rem", fontSize: "0.85rem", fontFamily: "'Barlow Condensed', sans-serif", outline: "none", boxSizing: "border-box" }}
+                />
+              </div>
+            </div>
             <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
               <button onClick={() => setNoteModal(null)} style={{ background: "transparent", color: COLORS.grey, border: `1px solid ${COLORS.border}`, borderRadius: "4px", padding: "0.45rem 1rem", cursor: "pointer", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.8rem", letterSpacing: "0.06em" }}>
                 CANCEL
               </button>
-              <button onClick={() => confirmFeature(noteModal.article, noteModal.note, noteModal.category)} style={{ background: COLORS.red, color: COLORS.white, border: "none", borderRadius: "4px", padding: "0.45rem 1.2rem", cursor: "pointer", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.08em" }}>
+              <button onClick={() => confirmFeature(noteModal.article, noteModal.note, noteModal.category, noteModal.metaDescription, noteModal.keywords)} style={{ background: COLORS.red, color: COLORS.white, border: "none", borderRadius: "4px", padding: "0.45rem 1.2rem", cursor: "pointer", fontFamily: "'Barlow Condensed', sans-serif", fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.08em" }}>
                 ★ FEATURE THIS STORY
               </button>
             </div>
