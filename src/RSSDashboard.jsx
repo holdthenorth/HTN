@@ -599,7 +599,7 @@ export default function RSSDashboard() {
               {voices.map(v => (
                 <div key={v.id} style={{ display: "flex", alignItems: "center", gap: "1rem", padding: "0.85rem 1rem", borderTop: `1px solid ${COLORS.border}`, background: COLORS.bg }}>
                   {v.photo ? (
-                    <img src={v.photo} alt="" onError={e => { e.target.style.display = "none"; }} width="44" height="44" loading="lazy" style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
+                    <img src={v.photo} alt="" onError={e => { e.target.style.display = "none"; }} style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }} />
                   ) : (
                     <div style={{ width: 44, height: 44, borderRadius: "50%", background: COLORS.card, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", color: COLORS.grey, fontSize: "1.1rem" }}>👤</div>
                   )}
@@ -681,7 +681,7 @@ export default function RSSDashboard() {
             <div style={{ display: "flex", flexDirection: "column" }}>
               {pitchPosts.map(p => (
                 <div key={p.id} style={{ display: "flex", alignItems: "flex-start", gap: "1rem", padding: "1rem", borderTop: `1px solid ${COLORS.border}`, background: COLORS.bg }}>
-                  {p.photo && <img src={p.photo} alt="" onError={e => e.target.style.display = "none"} width="60" height="60" loading="lazy" style={{ width: 60, height: 60, objectFit: "cover", borderRadius: "4px", flexShrink: 0 }} />}
+                  {p.photo && <img src={p.photo} alt="" onError={e => e.target.style.display = "none"} style={{ width: 60, height: 60, objectFit: "cover", borderRadius: "4px", flexShrink: 0 }} />}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ color: COLORS.white, fontSize: "0.92rem", fontWeight: 700, marginBottom: "0.15rem", fontFamily: "Georgia, serif" }}>{p.title}</div>
                     <div style={{ color: COLORS.grey, fontSize: "0.65rem", letterSpacing: "0.06em", marginBottom: "0.25rem" }}>
@@ -707,7 +707,7 @@ export default function RSSDashboard() {
 
       {activeTab === "articles" && heroArticle && (
         <div style={{ background: COLORS.hero, border: `2px solid ${COLORS.orange}`, borderRadius: "8px", padding: "1.25rem 1.5rem", marginBottom: "1.5rem", display: "flex", gap: "1.5rem", alignItems: "flex-start" }}>
-          {heroArticle.image && <img src={heroArticle.image} alt="" onError={e => { e.target.style.display = "none"; }} width="200" height="130" loading="lazy" style={{ width: "200px", height: "130px", objectFit: "cover", borderRadius: "6px", flexShrink: 0 }} />}
+          {heroArticle.image && <img src={heroArticle.image} alt="" onError={e => { e.target.style.display = "none"; }} style={{ width: "200px", height: "130px", objectFit: "cover", borderRadius: "6px", flexShrink: 0 }} />}
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem", flexWrap: "wrap" }}>
               <span style={{ background: COLORS.orange, color: COLORS.white, fontSize: "0.65rem", padding: "0.2rem 0.6rem", borderRadius: "3px", letterSpacing: "0.1em", fontWeight: 700 }}>📌 HERO STORY</span>
@@ -814,7 +814,7 @@ export default function RSSDashboard() {
             const isHero = heroId === article.id;
             return (
               <div key={article.id} style={{ background: COLORS.card, border: `1px solid ${isHero ? COLORS.orange : isFeatured ? COLORS.red : COLORS.border}`, borderRadius: "6px", overflow: "hidden", display: "flex", flexDirection: "column" }}>
-                {article.image && <img src={article.image} alt="" onError={e => { e.target.style.display = "none"; }} width="320" height="160" loading="lazy" style={{ width: "100%", height: "160px", objectFit: "cover", display: "block" }} />}
+                {article.image && <img src={article.image} alt="" onError={e => { e.target.style.display = "none"; }} style={{ width: "100%", height: "160px", objectFit: "cover", display: "block" }} />}
                 <div style={{ padding: "0.9rem", display: "flex", flexDirection: "column", gap: "0.45rem", flex: 1 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
                     <span style={{ background: isHero ? COLORS.orange : COLORS.red, color: COLORS.white, fontSize: "0.62rem", padding: "0.18rem 0.5rem", borderRadius: "3px", letterSpacing: "0.08em", whiteSpace: "nowrap", fontWeight: 700 }}>{isHero ? "📌 HERO" : article.source}</span>
