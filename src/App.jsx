@@ -502,8 +502,12 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
 
           {/* NEWS PAGE */}
           {location.pathname === "/" && (() => {
+            const cutoff = Date.now() - 10 * 24 * 60 * 60 * 1000;
             const seen = new Set();
             const deduped = curated.filter(a => {
+              if (!a.featured) return false;
+              const d = a.pubDate ? new Date(a.pubDate.replace(/\b(EDT|EST|CDT|CST|MDT|MST|PDT|PST)\b/, m => ({ EDT:"-0400",EST:"-0500",CDT:"-0500",CST:"-0600",MDT:"-0600",MST:"-0700",PDT:"-0700",PST:"-0800" }[m]))) : null;
+              if (d && !isNaN(d) && d.getTime() < cutoff) return false;
               const key = a.link || a.url || a.id;
               if (seen.has(key)) return false;
               seen.add(key);

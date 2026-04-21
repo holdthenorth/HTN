@@ -257,20 +257,43 @@ export default function RSSDashboard() {
       if (!skeletonDismissed) { setLoading(false); skeletonDismissed = true; }
     }
 
-    autoSyncNewArticles(sortAndDedup([...sourceResults.values()].flat()));
+    setLoading(false);
+  }
+
+  async function pushFeaturedList(newFeatured, newNotes, newHeroId) {
+    const heroArticle = newHeroId ? articles.find(a => a.id === newHeroId) : null;
+    const featuredArticles = articles.filter(a => newFeatured.includes(a.id) && a.id !== newHeroId);
+    const ordered = [...(heroArticle ? [heroArticle] : []), ...featuredArticles]
+      .map(a => ({ ...a, featured: true, curatorNote: newNotes[a.id]?.note || "", category: normCatId(newNotes[a.id]?.category || a.category) || "", metaDescription: newNotes[a.id]?.metaDescription || "", keywords: newNotes[a.id]?.keywords || "" }));
+    const current = await fetchCurrentBin();
+    await putToJsonBin(ordered, current.voices || voices, current.pitchPosts || pitchPosts);
   }
 
   function removeFeatured(id) {
+    let newFeatured, newNotes;
     setFeatured(prev => {
-      const updated = prev.filter(x => x !== id);
-      localStorage.setItem("htn-featured", JSON.stringify(updated));
-      return updated;
+      newFeatured = prev.filter(x => x !== id);
+      localStorage.setItem("htn-featured", JSON.stringify(newFeatured));
+      return newFeatured;
     });
     setNotes(prev => {
-      const updated = { ...prev };
-      delete updated[id];
-      localStorage.setItem("htn-notes", JSON.stringify(updated));
-      return updated;
+      newNotes = { ...prev };
+      delete newNotes[id];
+      localStorage.setItem("htn-notes", JSON.stringify(newNotes));
+      return newNotes;
+    });
+    const newHeroId = heroId === id ? null : heroId;
+    if (heroId === id) { setHeroId(null); localStorage.removeItem("htn-hero"); }
+    setSaveStatus("saving");
+    Promise.resolve().then(async () => {
+      try {
+        await pushFeaturedList(newFeatured, newNotes, newHeroId);
+        setSaveStatus("ok");
+        setTimeout(() => setSaveStatus(null), 3000);
+      } catch {
+        setSaveStatus("error");
+        setTimeout(() => setSaveStatus(null), 4000);
+      }
     });
   }
 
@@ -313,70 +336,11 @@ export default function RSSDashboard() {
     return ARTICLE_CATEGORIES.find(c => c.id === cat || c.label === cat)?.id || cat;
   }
 
-  async function autoSyncNewArticles(freshArticles) {
-    if (!freshArticles.length) return;
-    try {
-      // Inline fetch so we can check res.ok before touching anything.
-      // The previous version used fetchCurrentBin() which didn't check res.ok —
-      // a 429/401 made data.record undefined, existing fell to [], and ALL fresh
-      // articles became toAdd, overwriting the curated list.
-      const readRes = await fetch(`https://api.jsonbin.io/v3/b/${JSONBIN_ID}/latest`, {
-        headers: { "X-Master-Key": JSONBIN_KEY },
-      });
-      if (!readRes.ok) return; // rate-limit or auth error — abort, never write
-
-      const data = await readRes.json();
-      const existing = data.record?.articles || [];
-
-      // Second guard: if the bin returned 0 articles something is wrong.
-      // Writing 100+ raw RSS articles into an apparently-empty bin would
-      // silently wipe whatever was there.
-      if (existing.length === 0) return;
-
-      const existingKeys = new Set();
-      existing.forEach(a => {
-        if (a.id)   existingKeys.add(a.id);
-        if (a.link) existingKeys.add(a.link);
-      });
-
-      const cutoff = Date.now() - 10 * 24 * 60 * 60 * 1000;
-
-      const toAdd = freshArticles
-        .filter(a => !existingKeys.has(a.id) && !existingKeys.has(a.link))
-        .filter(a => { const d = parseDate(a.pubDate); return !d || d.getTime() >= cutoff; })
-        .map(a => ({
-          ...a,
-          curatorNote: "",
-          category: normCatId(a.category) || a.category || "",
-        }));
-
-      if (toAdd.length === 0) return; // nothing new — no write needed
-
-      // Merge, drop articles older than 10 days, then sort newest-first.
-      const merged = [...existing, ...toAdd]
-        .filter(a => { const d = parseDate(a.pubDate); return !d || d.getTime() >= cutoff; })
-        .sort((a, b) => {
-        const da = parseDate(a.pubDate);
-        const db = parseDate(b.pubDate);
-        if (!da && !db) return 0;
-        if (!da) return 1;
-        if (!db) return -1;
-        return db - da;
-      });
-
-      // Use putToJsonBin so the write goes through the serverless proxy.
-      await putToJsonBin(merged, data.record?.voices || [], data.record?.pitchPosts || []);
-      console.log(`[HTN sync] +${toAdd.length} new articles appended (total: ${merged.length})`);
-    } catch (err) {
-      console.warn("[HTN sync] skipped:", err.message);
-    }
-  }
-
   async function saveFeatured() {
     const heroArticle = heroId ? articles.find(a => a.id === heroId) : null;
     const featuredArticles = articles.filter(a => featured.includes(a.id) && a.id !== heroId);
     const ordered = [...(heroArticle ? [heroArticle] : []), ...featuredArticles]
-      .map(a => ({ ...a, curatorNote: notes[a.id]?.note || "", category: normCatId(notes[a.id]?.category || a.category) || "", metaDescription: notes[a.id]?.metaDescription || "", keywords: notes[a.id]?.keywords || "" }));
+      .map(a => ({ ...a, featured: true, curatorNote: notes[a.id]?.note || "", category: normCatId(notes[a.id]?.category || a.category) || "", metaDescription: notes[a.id]?.metaDescription || "", keywords: notes[a.id]?.keywords || "" }));
     if (ordered.length === 0) return;
     setSaveStatus("saving");
     try {
@@ -511,10 +475,13 @@ export default function RSSDashboard() {
   }
 
   const categories = ["All", "Mainstream", "Independent", "YouTube", "Custom"];
+  const TEN_DAYS_MS = 10 * 24 * 60 * 60 * 1000;
   const filtered = articles.filter(a => {
     const matchCat = activeFilter === "All" || a.category === activeFilter;
     const matchSearch = !search || a.title.toLowerCase().includes(search.toLowerCase()) || a.source.toLowerCase().includes(search.toLowerCase());
-    return matchCat && matchSearch;
+    const d = parseDate(a.pubDate);
+    const matchAge = !d || Date.now() - d.getTime() <= TEN_DAYS_MS;
+    return matchCat && matchSearch && matchAge;
   });
   const heroArticle = heroId ? articles.find(a => a.id === heroId) : null;
 
