@@ -1,6 +1,10 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
+export function slugifyName(name) {
+  return (name || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
 const JSONBIN_ID = import.meta.env.VITE_JSONBIN_ID || "69ce762aaaba882197bac5e8";
 const JSONBIN_KEY = import.meta.env.VITE_JSONBIN_KEY;
 const RSS2JSON = `https://api.rss2json.com/v1/api.json?api_key=${import.meta.env.VITE_RSS2JSON_API_KEY || "exemphyhi6xvldxk8dmrtjpdrxxfrr2o0nnoau54"}&rss_url=`;
@@ -158,9 +162,11 @@ export default function VoicesPage() {
                       </div>
                     </div>
 
-                    {/* Bio */}
+                    {/* Bio — strip leading name if the editor included it */}
                     {voice.bio && (
-                      <p style={{ fontFamily: "'Source Serif 4',serif", fontSize: "0.88rem", color: C.greyLight, lineHeight: 1.65, marginBottom: "0.8rem" }}>{voice.bio}</p>
+                      <p style={{ fontFamily: "'Source Serif 4',serif", fontSize: "0.88rem", color: C.greyLight, lineHeight: 1.65, marginBottom: "0.8rem" }}>
+                        {voice.bio.replace(new RegExp(`^${voice.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[\\s,.:—\\-–]*`, 'i'), '').trim()}
+                      </p>
                     )}
 
                     {/* Why HTN note */}
@@ -170,9 +176,14 @@ export default function VoicesPage() {
                       </div>
                     )}
 
-                    <button className="vp-toggle" onClick={() => handleExpand(voice)}>
-                      {expanded === voice.id ? "Hide posts ↑" : "View latest posts →"}
-                    </button>
+                    <div style={{ display: "flex", gap: "1rem", alignItems: "center", marginTop: "0.75rem" }}>
+                      <button className="vp-toggle" onClick={() => handleExpand(voice)}>
+                        {expanded === voice.id ? "Hide posts ↑" : "Latest posts →"}
+                      </button>
+                      <Link to={`/voices/${slugifyName(voice.name)}`} style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, fontSize: "0.7rem", letterSpacing: "0.12em", textTransform: "uppercase", color: C.grey, textDecoration: "none" }}>
+                        Full profile →
+                      </Link>
+                    </div>
                   </div>
                 </div>
               ))}

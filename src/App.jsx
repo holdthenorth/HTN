@@ -30,6 +30,7 @@ import { AuthProvider, useAuth } from "./AuthContext";
 import AuthModal from "./AuthModal";
 import MediaKit from "./pages/MediaKit";
 import VoicesPage from "./pages/VoicesPage";
+import VoicePage from "./pages/VoicePage";
 import { ThePitchIndex, ThePitchPost } from "./pages/ThePitch";
 import AboutPage from "./pages/AboutPage";
 import SubmitPage from "./pages/SubmitPage";
@@ -970,6 +971,7 @@ export function App() {
       <Route path="/about" element={<AboutPage />} />
       <Route path="/submit" element={<SubmitPage />} />
       <Route path="/voices" element={<VoicesPage />} />
+      <Route path="/voices/:slug" element={<VoicePage />} />
       <Route path="/the-pitch" element={<ThePitchIndex />} />
       <Route path="/the-pitch/:slug" element={<ThePitchPost />} />
       <Route path="/media-kit" element={<MediaKit />} />
