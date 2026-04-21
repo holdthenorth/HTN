@@ -107,7 +107,7 @@ exports.handler = async (event) => {
     headers: {
       "Content-Type": "application/json",
       "X-Master-Key": JSONBIN_KEY,
-      "X-Bin-Versioning": "false",
+      "X-Bin-Versioning": "true",
     },
     body: bodyStr,
   });
