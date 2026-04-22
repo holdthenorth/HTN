@@ -37,29 +37,29 @@ import SubmitPage from "./pages/SubmitPage";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 const COLORS = {
-  red: "#C8102E",
-  redDark: "#A00D24",
-  charcoal: "#2D2D2D",
-  navy: "#0D1117",
-  navyMid: "#131920",
-  navyLight: "#1A2332",
-  white: "#FFFFFF",
-  offWhite: "#F0EDE8",
-  grey: "#8A8F98",
-  greyLight: "#B8BCC4",
-  border: "#1E2A3A",
+  red: "#C0392B",
+  redDark: "#922B21",
+  charcoal: "#1C1C1C",
+  navy: "#F7F2EB",
+  navyMid: "#F0EBE3",
+  navyLight: "#FFFFFF",
+  white: "#1A1A1A",
+  offWhite: "#1A1A1A",
+  grey: "#888888",
+  greyLight: "#555555",
+  border: "#E8E2D9",
 };
 
 const CATEGORIES = [
   { id: "all",             label: "All",             color: COLORS.red },
-  { id: "politics",        label: "Politics",         color: "#C8102E" },
+  { id: "politics",        label: "Politics",         color: "#C0392B" },
   { id: "world",           label: "World",            color: "#1A6FC4" },
   { id: "voices",          label: "Voices",           color: "#2A9C6F" },
   { id: "street-level",    label: "Street Level",     color: "#C47A1A" },
   { id: "trump-watch",     label: "Trump Watch",      color: "#8B2FC9" },
-  { id: "the-pitch",       label: "The Pitch",        color: "#1A8FA0" },
-  { id: "on-the-ground",   label: "On the Ground",    color: "#7A6C2E" },
   { id: "standing-ground", label: "Standing Ground",  color: "#5A3E8A" },
+  { id: "the-squeeze",     label: "The Squeeze",      color: "#1C1C1C" },
+  { id: "health-care",     label: "Health & Care",    color: "#0A4A4A" },
 ];
 
 const TICKER_ITEMS = [
@@ -294,7 +294,7 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
   return (
     <>
       {showLoader && <MapleLeafLoader onComplete={onLoaderComplete} />}
-      <div style={{ minHeight: "100vh", background: COLORS.navy, color: COLORS.offWhite, fontFamily: "Georgia, serif", overflowX: "hidden" }}>
+      <div style={{ minHeight: "100vh", background: "#F7F2EB", color: COLORS.white, fontFamily: "Georgia, serif", overflowX: "hidden" }}>
         <style>{`
           @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;1,8..60,400&family=Barlow+Condensed:wght@400;600;700&display=swap');
           *{box-sizing:border-box;margin:0;padding:0}
@@ -304,59 +304,58 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
           @keyframes pwaSlideUp{from{transform:translateY(100%);opacity:0}to{transform:translateY(0);opacity:1}}
           @keyframes menuSlideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
           @keyframes menuFadeIn{from{opacity:0}to{opacity:1}}
-          .htn-hamburger{display:none;background:none;border:none;cursor:pointer;padding:0.4rem;color:#B8BCC4;line-height:0;flex-shrink:0}
-          .htn-hamburger:hover{color:#fff}
-          .htn-menu-link{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1.25rem;letter-spacing:0.1em;text-transform:uppercase;color:#8A8F98;padding:1rem 0;border-bottom:1px solid #1E2A3A;display:block;text-decoration:none;transition:color 0.18s}
-          .htn-menu-link:hover{color:#F0EDE8}
-          .htn-menu-link.active{color:#C8102E}
+          .htn-hamburger{display:none;background:none;border:none;cursor:pointer;padding:0.4rem;color:#888888;line-height:0;flex-shrink:0}
+          .htn-hamburger:hover{color:#1A1A1A}
+          .htn-menu-link{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:1.1rem;letter-spacing:0.08em;text-transform:uppercase;color:#555555;padding:0.9rem 0;border-bottom:1px solid #E8E2D9;display:block;text-decoration:none;transition:color 0.18s}
+          .htn-menu-link:hover{color:#1A1A1A}
+          .htn-menu-link.active{color:#C0392B}
           .htn-fade{animation:htnFade 0.65s ease forwards}
           .s1{opacity:0;animation:htnFade 0.6s ease 0.1s forwards}
           .s2{opacity:0;animation:htnFade 0.6s ease 0.2s forwards}
           .s3{opacity:0;animation:htnFade 0.6s ease 0.32s forwards}
           .tick{animation:tickFade 0.4s ease}
-          .live-dot{width:7px;height:7px;border-radius:50%;background:#C8102E;display:inline-block;margin-right:0.3rem;animation:pulse 1.5s ease-in-out infinite}
-          .nav-btn{font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:0.78rem;letter-spacing:0.12em;text-transform:uppercase;color:#B8BCC4;cursor:pointer;padding:0.5rem 0;border:none;border-bottom:2px solid transparent;background:none;transition:all 0.2s}
-          .nav-btn:hover{color:#fff}
-          .nav-btn.active{color:#fff;border-bottom-color:#C8102E}
-          .cat-pill{font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:0.7rem;letter-spacing:0.14em;text-transform:uppercase;padding:0.4rem 0.9rem;border:1px solid #1E2A3A;background:transparent;color:#8A8F98;cursor:pointer;transition:all 0.2s}
-          .cat-pill:hover{border-color:#C8102E;color:#F0EDE8}
-          .cat-pill.active{background:#C8102E;border-color:#C8102E;color:#fff}
-          .card{background:#1A2332;border:1px solid #1E2A3A;transition:all 0.22s ease;display:flex;flex-direction:column}
-          .card:hover{border-color:rgba(200,16,46,0.35);transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,0.45)}
-          .story-title{font-family:'Playfair Display',Georgia,serif;font-weight:700;line-height:1.25;color:#F0EDE8;transition:color 0.2s}
-          .card:hover .story-title{color:#fff}
-          .cat-tag{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.62rem;letter-spacing:0.18em;text-transform:uppercase;padding:0.18rem 0.45rem;display:inline-block}
-          .meta{font-family:'Barlow Condensed',sans-serif;font-size:0.7rem;letter-spacing:0.07em;color:#8A8F98}
-          .read-link{font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:0.7rem;letter-spacing:0.14em;text-transform:uppercase;color:#C8102E;text-decoration:none;display:inline-flex;align-items:center;gap:0.3rem;transition:gap 0.2s}
+          .live-dot{width:7px;height:7px;border-radius:50%;background:#C0392B;display:inline-block;margin-right:0.3rem;animation:pulse 1.5s ease-in-out infinite}
+          .nav-btn{font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:0.78rem;letter-spacing:0.12em;text-transform:uppercase;color:#555555;cursor:pointer;padding:0.5rem 0;border:none;border-bottom:2px solid transparent;background:none;transition:all 0.2s}
+          .nav-btn:hover{color:#1A1A1A}
+          .nav-btn.active{color:#1A1A1A;border-bottom-color:#C0392B}
+          .cat-pill{font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:0.7rem;letter-spacing:0.14em;text-transform:uppercase;padding:0.35rem 0.85rem;border:1px solid #E8E2D9;background:#F0EBE3;color:#555555;cursor:pointer;transition:all 0.2s;border-radius:3px}
+          .cat-pill:hover{border-color:#C0392B;color:#C0392B}
+          .cat-pill.active{color:#fff;border-color:transparent}
+          .card{background:#FFFFFF;border:1px solid #E8E2D9;transition:all 0.22s ease;display:flex;flex-direction:row;gap:0.9rem;align-items:flex-start;padding:0.9rem;border-radius:8px}
+          .card:hover{border-color:rgba(192,57,43,0.3);box-shadow:0 2px 12px rgba(0,0,0,0.08)}
+          .story-title{font-family:'Playfair Display',Georgia,serif;font-weight:700;line-height:1.3;color:#1A1A1A;transition:color 0.2s;font-size:0.97rem;margin:0.25rem 0}
+          .card:hover .story-title{color:#C0392B}
+          .cat-tag{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.58rem;letter-spacing:0.14em;text-transform:uppercase;padding:0.18rem 0.45rem;display:inline-block;border-radius:2px}
+          .meta{font-family:'Barlow Condensed',sans-serif;font-size:0.7rem;letter-spacing:0.07em;color:#888888}
+          .read-link{font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:0.7rem;letter-spacing:0.14em;text-transform:uppercase;color:#C0392B;text-decoration:none;display:inline-flex;align-items:center;gap:0.3rem;transition:gap 0.2s}
           .read-link:hover{gap:0.55rem}
-          .note-text{font-family:'Source Serif 4',Georgia,serif;font-style:italic;font-size:0.88rem;color:#8A8F98;line-height:1.55;border-left:2px solid rgba(200,16,46,0.5);padding-left:0.75rem}
-          .fi{width:100%;background:#131920;border:1px solid #1E2A3A;color:#F0EDE8;padding:0.6rem 0.75rem;font-family:'Source Serif 4',Georgia,serif;font-size:0.92rem;outline:none;transition:border-color 0.2s}
-          .fi:focus{border-color:rgba(200,16,46,0.6)}
-          .fi option{background:#131920}
-          .fl{font-family:'Barlow Condensed',sans-serif;font-size:0.62rem;letter-spacing:0.18em;text-transform:uppercase;color:#8A8F98;display:block;margin-bottom:0.35rem}
-          .btn-r{background:#C8102E;border:none;color:#fff;padding:0.65rem 1.6rem;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.78rem;letter-spacing:0.16em;text-transform:uppercase;cursor:pointer;transition:background 0.2s}
-          .btn-r:hover{background:#A00D24}
-          .btn-g{background:transparent;border:1px solid #1E2A3A;color:#8A8F98;padding:0.65rem 1.1rem;font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all 0.2s}
-          .btn-g:hover{border-color:#8A8F98;color:#F0EDE8}
-          .chip{font-family:'Barlow Condensed',sans-serif;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;padding:0.2rem 0.5rem;background:transparent;border:1px solid #1E2A3A;color:#8A8F98;cursor:pointer;transition:all 0.2s}
-          .chip:hover{border-color:rgba(200,16,46,0.5);color:#C8102E}
+          .note-text{font-family:'Source Serif 4',Georgia,serif;font-style:italic;font-size:0.88rem;color:#888888;line-height:1.55;border-left:2px solid rgba(192,57,43,0.4);padding-left:0.75rem}
+          .fi{width:100%;background:#F7F2EB;border:1px solid #E8E2D9;color:#1A1A1A;padding:0.6rem 0.75rem;font-family:'Source Serif 4',Georgia,serif;font-size:0.92rem;outline:none;transition:border-color 0.2s}
+          .fi:focus{border-color:rgba(192,57,43,0.5)}
+          .fi option{background:#F7F2EB}
+          .fl{font-family:'Barlow Condensed',sans-serif;font-size:0.62rem;letter-spacing:0.18em;text-transform:uppercase;color:#888888;display:block;margin-bottom:0.35rem}
+          .btn-r{background:#C0392B;border:none;color:#fff;padding:0.65rem 1.6rem;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.78rem;letter-spacing:0.16em;text-transform:uppercase;cursor:pointer;transition:background 0.2s}
+          .btn-r:hover{background:#922B21}
+          .btn-g{background:transparent;border:1px solid #E8E2D9;color:#888888;padding:0.65rem 1.1rem;font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all 0.2s}
+          .btn-g:hover{border-color:#888888;color:#1A1A1A}
+          .chip{font-family:'Barlow Condensed',sans-serif;font-size:0.62rem;letter-spacing:0.14em;text-transform:uppercase;padding:0.2rem 0.5rem;background:transparent;border:1px solid #E8E2D9;color:#888888;cursor:pointer;transition:all 0.2s}
+          .chip:hover{border-color:rgba(192,57,43,0.5);color:#C0392B}
           .chip.del:hover{border-color:#C94444;color:#C94444}
-          .sec-label{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.68rem;letter-spacing:0.22em;text-transform:uppercase;color:#8A8F98;display:flex;align-items:center;gap:0.6rem}
-          .sec-label::after{content:'';flex:1;height:1px;background:#1E2A3A}
-          .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.88);display:flex;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(4px)}
-          .toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#2D2D2D;color:#F0EDE8;padding:0.65rem 1.4rem;font-family:'Barlow Condensed',sans-serif;font-size:0.78rem;letter-spacing:0.1em;z-index:300;border-left:3px solid #C8102E;box-shadow:0 4px 20px rgba(0,0,0,0.5);animation:htnFade 0.3s ease;white-space:nowrap}
-          .news-row{display:flex;gap:1rem;padding:1rem 0;border-bottom:1px solid #1E2A3A;text-decoration:none;transition:background 0.2s}
-          .news-row:hover{background:#1A2332}
+          .sec-label{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:0.68rem;letter-spacing:0.22em;text-transform:uppercase;color:#888888;display:flex;align-items:center;gap:0.6rem}
+          .sec-label::after{content:'';flex:1;height:1px;background:#E8E2D9}
+          .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(4px)}
+          .toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#1A1A1A;color:#F7F2EB;padding:0.65rem 1.4rem;font-family:'Barlow Condensed',sans-serif;font-size:0.78rem;letter-spacing:0.1em;z-index:300;border-left:3px solid #C0392B;box-shadow:0 4px 20px rgba(0,0,0,0.2);animation:htnFade 0.3s ease;white-space:nowrap}
+          .news-row{display:flex;gap:1rem;padding:1rem 0;border-bottom:1px solid #E8E2D9;text-decoration:none;transition:background 0.2s}
+          .news-row:hover{background:#F7F2EB}
           .news-row:last-child{border-bottom:none}
           @keyframes shimmer{0%{background-position:-600px 0}100%{background-position:600px 0}}
-          .skel{background:linear-gradient(90deg,#1A2332 25%,#222d3d 50%,#1A2332 75%);background-size:1200px 100%;animation:shimmer 1.5s ease-in-out infinite}
+          .skel{background:linear-gradient(90deg,#F0EBE3 25%,#E8E2D9 50%,#F0EBE3 75%);background-size:1200px 100%;animation:shimmer 1.5s ease-in-out infinite}
           .htn-footer-grid{display:grid;grid-template-columns:1fr 2fr 1fr;gap:3rem;align-items:start}
           @media(max-width:768px){
             .htn-footer-grid{grid-template-columns:1fr;gap:2rem}
             .htn-nav-links{display:none!important}
             .htn-curator-chip{display:none!important}
             .htn-hamburger{display:flex!important}
-            .htn-cat-pills{display:none!important}
           }
         `}</style>
 
@@ -386,11 +385,11 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
         </div>
 
         {/* MASTHEAD */}
-        <header style={{ background: COLORS.navy, borderBottom: `3px solid ${COLORS.red}` }}>
-          <div style={{ maxWidth: 1200, margin: "0 auto", padding: "1rem 1.2rem" }}>
-            <div className={loaded ? "s1" : ""} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem" }}>
+        <header style={{ background: "#FFFFFF", borderBottom: `2px solid ${COLORS.red}` }}>
+          <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0.6rem 1.2rem" }}>
+            <div className={loaded ? "s1" : ""} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "0.75rem" }}>
               <Link to="/" style={{ textDecoration: "none" }}>
-                <img src="/htncrop.png" alt="HTN News Canada" style={{ height: "58px" }} />
+                <img src="/htncrop.png" alt="HTN News Canada" style={{ height: "48px" }} />
               </Link>
               <nav style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
                 <div className="htn-nav-links" style={{ display: "flex", gap: "1.6rem", alignItems: "center" }}>
@@ -403,21 +402,21 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
                   <div style={{ position: "relative", zIndex: 101 }}>
                     <button
                       onClick={() => setShowUserMenu(v => !v)}
-                      style={{ display: "flex", alignItems: "center", gap: "0.45rem", background: "none", border: `1px solid ${COLORS.border}`, padding: "0.35rem 0.7rem", cursor: "pointer", fontFamily: "'Barlow Condensed',sans-serif", fontSize: "0.72rem", letterSpacing: "0.1em", color: COLORS.greyLight, transition: "all 0.2s" }}
+                      style={{ display: "flex", alignItems: "center", gap: "0.45rem", background: "none", border: `1px solid ${COLORS.border}`, padding: "0.35rem 0.7rem", cursor: "pointer", fontFamily: "'Barlow Condensed',sans-serif", fontSize: "0.72rem", letterSpacing: "0.1em", color: COLORS.grey, transition: "all 0.2s" }}
                       onMouseEnter={e => e.currentTarget.style.borderColor = COLORS.grey}
                       onMouseLeave={e => e.currentTarget.style.borderColor = COLORS.border}
                     >
-                      <span style={{ width: 22, height: 22, borderRadius: "50%", background: COLORS.red, display: "inline-flex", alignItems: "center", justifyContent: "center", color: COLORS.white, fontSize: "0.7rem", fontWeight: 700, flexShrink: 0 }}>
+                      <span style={{ width: 22, height: 22, borderRadius: "50%", background: COLORS.red, display: "inline-flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: "0.7rem", fontWeight: 700, flexShrink: 0 }}>
                         {(profile?.username || user.email)?.[0]?.toUpperCase() || "?"}
                       </span>
                       {profile?.username || user.email.split("@")[0]}
                     </button>
                     {showUserMenu && (
-                      <div style={{ position: "absolute", right: 0, top: "calc(100% + 0.4rem)", background: COLORS.navyLight, border: `1px solid ${COLORS.border}`, minWidth: 140, zIndex: 100 }}>
+                      <div style={{ position: "absolute", right: 0, top: "calc(100% + 0.4rem)", background: "#FFFFFF", border: `1px solid ${COLORS.border}`, minWidth: 140, zIndex: 100, boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}>
                         <button
                           onClick={() => { signOut(); setShowUserMenu(false); }}
                           style={{ display: "block", width: "100%", background: "none", border: "none", borderBottom: `1px solid ${COLORS.border}`, color: COLORS.grey, padding: "0.65rem 1rem", fontFamily: "'Barlow Condensed',sans-serif", fontSize: "0.72rem", letterSpacing: "0.1em", textTransform: "uppercase", cursor: "pointer", textAlign: "left", transition: "color 0.2s" }}
-                          onMouseEnter={e => e.target.style.color = COLORS.offWhite}
+                          onMouseEnter={e => e.target.style.color = COLORS.white}
                           onMouseLeave={e => e.target.style.color = COLORS.grey}
                         >
                           Sign Out
@@ -427,13 +426,15 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
                   </div>
                 ) : (
                   <>
-                    <button
+                    <a
+                      href="https://ko-fi.com/X8X41XSDD8"
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="nav-btn"
-                      onClick={() => { setAuthModalTab("signup"); setShowAuthModal(true); }}
-                      style={{ display: "flex", alignItems: "center", gap: "0.35rem", background: COLORS.red, color: "#fff", border: "none", padding: "0.4rem 0.9rem", fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, fontSize: "0.72rem", letterSpacing: "0.12em", textTransform: "uppercase", cursor: "pointer" }}
+                      style={{ display: "flex", alignItems: "center", gap: "0.35rem", background: COLORS.red, color: "#fff", border: "none", padding: "0.4rem 0.9rem", fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, fontSize: "0.72rem", letterSpacing: "0.12em", textTransform: "uppercase", cursor: "pointer", textDecoration: "none" }}
                     >
                       Subscribe
-                    </button>
+                    </a>
                     <button
                       className="nav-btn"
                       onClick={() => { setAuthModalTab("signin"); setShowAuthModal(true); }}
@@ -459,22 +460,26 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
                 </button>
               </nav>
             </div>
-            {location.pathname === "/" && (
-              <div className={`htn-cat-pills${loaded ? " s2" : ""}`} style={{ marginTop: "0.9rem", display: "flex", gap: "0.3rem", flexWrap: "wrap", alignItems: "center" }}>
-                {CATEGORIES.map(c => (
-                  <button key={c.id} className={`cat-pill ${activeCategory === c.id ? "active" : ""}`}
-                    onClick={() => c.id === "all" ? setSearchParams({}) : setSearchParams({ cat: c.id })}
-                    style={{ borderColor: activeCategory === c.id ? c.color : undefined, background: activeCategory === c.id ? c.color : undefined }}>
-                    {c.label}
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
         </header>
 
+        {/* CATEGORY PILL BAR — always visible on homepage */}
+        {location.pathname === "/" && (
+          <div style={{ background: "#FFFFFF", borderBottom: `1px solid ${COLORS.border}` }}>
+            <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0.5rem 1.2rem", display: "flex", gap: "0.3rem", flexWrap: "wrap", alignItems: "center" }}>
+              {CATEGORIES.map(c => (
+                <button key={c.id} className={`cat-pill${activeCategory === c.id ? " active" : ""}`}
+                  onClick={() => c.id === "all" ? setSearchParams({}) : setSearchParams({ cat: c.id })}
+                  style={activeCategory === c.id ? { background: c.color, borderColor: c.color } : {}}>
+                  {c.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* MAIN */}
-        <main style={{ maxWidth: 1200, margin: "0 auto", padding: "1.8rem 1.2rem 4rem" }}>
+        <main style={{ maxWidth: 1200, margin: "0 auto", padding: "1.4rem 1.2rem 4rem" }}>
 
           {/* FORM */}
           {adminMode && showForm && (
@@ -519,21 +524,16 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
             const visibleArticles = activeCategory === "all" ? deduped : deduped.filter(a => normCat(a.category) === activeCategory);
             const catColor = CATEGORIES.find(c => c.id === activeCategory)?.color || COLORS.red;
             if (feedLoading) return (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "1rem" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                 {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="card" style={{ borderRadius: "6px", overflow: "hidden" }}>
-                    <div className="skel" style={{ height: 200 }} />
-                    <div style={{ padding: "0.9rem", display: "flex", flexDirection: "column", gap: "0.65rem" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", gap: "0.5rem" }}>
-                        <div className="skel" style={{ height: 14, width: "35%", borderRadius: 3 }} />
-                        <div className="skel" style={{ height: 14, width: "20%", borderRadius: 3 }} />
-                      </div>
-                      <div className="skel" style={{ height: 18, width: "90%", borderRadius: 3 }} />
-                      <div className="skel" style={{ height: 18, width: "70%", borderRadius: 3 }} />
-                      <div className="skel" style={{ height: 13, width: "95%", borderRadius: 3, marginTop: "0.2rem" }} />
-                      <div className="skel" style={{ height: 13, width: "80%", borderRadius: 3 }} />
-                      <div className="skel" style={{ height: 13, width: "55%", borderRadius: 3 }} />
+                  <div key={i} className="card">
+                    <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                      <div className="skel" style={{ height: 12, width: "25%", borderRadius: 3 }} />
+                      <div className="skel" style={{ height: 16, width: "85%", borderRadius: 3 }} />
+                      <div className="skel" style={{ height: 16, width: "65%", borderRadius: 3 }} />
+                      <div className="skel" style={{ height: 12, width: "40%", borderRadius: 3, marginTop: "0.25rem" }} />
                     </div>
+                    <div className="skel" style={{ width: 68, height: 68, borderRadius: 6, flexShrink: 0 }} />
                   </div>
                 ))}
               </div>
@@ -543,47 +543,51 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
                 {curated.length === 0 ? "No stories yet — check back soon." : "No stories in this category yet."}
               </div>
             ) : (
-              <div className={loaded ? "s2" : ""} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "1rem" }}>
-                {visibleArticles.map((article, idx) => (
-                  <Link key={article.id} to={`/story/${storySlug(article.id)}`} style={{ textDecoration: "none" }}>
-                    <div className="card" style={{ borderRadius: "6px", overflow: "hidden", height: "100%", borderTopColor: catColor }}>
-                      {article.image && <img src={article.image} alt="" width="640" height="200" loading={idx === 0 ? "eager" : "lazy"} fetchpriority={idx === 0 ? "high" : "auto"} decoding={idx === 0 ? "sync" : "async"} onError={e => { e.target.style.display = "none"; }} style={{ width: "100%", height: "200px", objectFit: "cover", display: "block" }} />}
-                      <div style={{ padding: "0.9rem", display: "flex", flexDirection: "column", gap: "0.45rem", flex: 1 }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
-                          <span style={{ background: COLORS.red, color: COLORS.white, fontSize: "0.62rem", padding: "0.18rem 0.5rem", borderRadius: "3px", letterSpacing: "0.08em", whiteSpace: "nowrap", fontWeight: 700, fontFamily: "'Barlow Condensed',sans-serif" }}>{article.source}</span>
-                          <span style={{ color: COLORS.grey, fontSize: "0.72rem", whiteSpace: "nowrap", fontFamily: "'Barlow Condensed',sans-serif" }}>{timeAgo(article.pubDate)}</span>
-                        </div>
-                        <p style={{ fontFamily: "'Playfair Display',serif", fontWeight: 700, fontSize: "1rem", color: COLORS.white, lineHeight: 1.3, margin: 0 }}>{article.title}</p>
-                        {article.description && <p style={{ color: COLORS.grey, fontSize: "0.82rem", margin: 0, lineHeight: 1.55, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden", fontFamily: "'Source Serif 4',serif" }}>{stripHtml(article.description)}</p>}
-                        <div style={{ marginTop: "auto", paddingTop: "0.5rem", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.5rem" }}>
-                          <span className="read-link">{isYT(article.link) ? "▶ Watch Now" : "Read More"} →</span>
-                          {/* Share buttons — stopPropagation prevents the parent <Link> from navigating */}
-                          <div style={{ display: "flex", gap: "0.3rem" }} onClick={e => e.stopPropagation()}>
-                            {(() => {
-                              const su  = `${window.location.origin}/story/${storySlug(article.id)}`;
-                              const esu = encodeURIComponent(su);
-                              const t   = encodeURIComponent(article.title);
-                              const u   = encodeURIComponent(article.link || su);
-                              return [
-                                { label: "Bluesky",  color: "#0085ff", href: `https://bsky.app/intent/compose?text=${encodeURIComponent(article.title + " " + (article.link || su))}`,                   icon: <svg width="11" height="10" viewBox="0 0 360 320" fill="currentColor"><path d="M180 141.964C163.68 112.519 126.639 51.985 89.882 32.116 68.232 20.247 39.327 16.427 21.517 34.483 2.644 53.617 5.496 82.438 18.447 100.58c8.89 12.37 23.49 18.927 38.14 21.085-15.247 2.607-33.665 11.497-39.673 50.504-8.008 51.51 43.396 65.798 78.34 46.394C135.04 199.33 163.054 167.99 180 141.964z"/><path d="M180 141.964C196.32 112.519 233.361 51.985 270.118 32.116c21.65-11.869 50.555-15.689 68.365 2.367 18.873 19.134 16.021 47.955 3.07 66.097-8.89 12.37-23.49 18.927-38.14 21.085 15.247 2.607 33.665 11.497 39.673 50.504 8.008 51.51-43.396 65.798-78.34 46.394C224.96 199.33 196.946 167.99 180 141.964z"/></svg> },
-                                { label: "Facebook", color: "#1877f2", href: `https://www.facebook.com/sharer/sharer.php?u=${esu}`,                                                    icon: <svg width="9"  height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg> },
-                                { label: "X",        color: "#e8e8e8", href: `https://twitter.com/intent/tweet?text=${t}&url=${u}`,                                                   icon: <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg> },
-                              ].map(({ label, color, href, icon }) => (
-                                <button key={label}
-                                  onClick={e => { e.preventDefault(); e.stopPropagation(); window.open(href, "_blank", "noopener,noreferrer"); }}
-                                  title={`Share on ${label}`}
-                                  style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 24, height: 24, color: "#3A4A5A", border: "1px solid #1E2A3A", borderRadius: "3px", transition: "color 0.18s, border-color 0.18s", background: "none", cursor: "pointer", padding: 0 }}
-                                  onMouseEnter={e => { e.currentTarget.style.color = color; e.currentTarget.style.borderColor = color; }}
-                                  onMouseLeave={e => { e.currentTarget.style.color = "#3A4A5A"; e.currentTarget.style.borderColor = "#1E2A3A"; }}
-                                >{icon}</button>
-                              ));
-                            })()}
+              <div className={loaded ? "s2" : ""} style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+                {visibleArticles.flatMap((article, idx) => {
+                  const artCatColor = CATEGORIES.find(c => c.id === normCat(article.category))?.color || COLORS.red;
+                  const artCatLabel = CATEGORIES.find(c => c.id === normCat(article.category))?.label || article.category || "";
+                  const thumb = article.image || article.authorImage || null;
+                  const thumbIsCircle = !article.image && article.authorImage;
+                  const card = (
+                    <Link key={article.id} to={`/story/${storySlug(article.id)}`} style={{ textDecoration: "none" }}>
+                      <div className="card">
+                        {/* Text */}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          {artCatLabel && (
+                            <span className="cat-tag" style={{ background: artCatColor, color: "#fff", marginBottom: "0.2rem" }}>{artCatLabel}</span>
+                          )}
+                          <p className="story-title">{article.title}</p>
+                          {article.description && (
+                            <p style={{ color: COLORS.grey, fontSize: "0.8rem", margin: "0.1rem 0 0.3rem", lineHeight: 1.5, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", fontFamily: "'Source Serif 4',serif" }}>{stripHtml(article.description)}</p>
+                          )}
+                          <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: "0.65rem", letterSpacing: "0.06em", color: COLORS.grey, marginTop: "0.25rem" }}>
+                            {article.source}{article.source && article.pubDate ? " · " : ""}{timeAgo(article.pubDate)}
                           </div>
                         </div>
+                        {/* Thumbnail */}
+                        {thumb ? (
+                          <img src={thumb} alt="" onError={e => { e.target.style.display = "none"; }}
+                            style={{ width: 68, height: 68, objectFit: "cover", borderRadius: thumbIsCircle ? "50%" : "6px", flexShrink: 0 }} />
+                        ) : (
+                          <div style={{ width: 68, height: 68, borderRadius: "6px", background: artCatColor, flexShrink: 0, opacity: 0.15 }} />
+                        )}
                       </div>
+                    </Link>
+                  );
+                  const supportCard = (idx + 1) % 10 === 0 ? (
+                    <div key={`support-${idx}`} style={{ background: "#1C1C1C", borderRadius: "8px", padding: "1.1rem 1.2rem", display: "flex", flexDirection: "column", gap: "0.85rem" }}>
+                      <p style={{ fontFamily: "'Source Serif 4',serif", fontSize: "0.88rem", color: "#FFFFFF", lineHeight: 1.65, margin: 0 }}>
+                        HTN doesn't answer to party lines — it answers to readers like you. $1.99 a month keeps these voices free.
+                      </p>
+                      <a href="https://ko-fi.com/X8X41XSDD8" target="_blank" rel="noopener noreferrer"
+                        style={{ display: "inline-block", background: "#C0392B", color: "#fff", fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, fontSize: "0.75rem", letterSpacing: "0.12em", textTransform: "uppercase", padding: "0.5rem 1rem", borderRadius: "4px", textDecoration: "none", alignSelf: "flex-start" }}>
+                        Support HTN — $1.99/mo
+                      </a>
                     </div>
-                  </Link>
-                ))}
+                  ) : null;
+                  return supportCard ? [card, supportCard] : [card];
+                })}
               </div>
             );
           })()}
@@ -615,16 +619,6 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
                   <img src="https://storage.ko-fi.com/cdn/cup-border.png" alt="" style={{ height: 20, width: "auto" }} />
                   Support Independent Journalism
                 </a>
-                {!user && (
-                  <button
-                    onClick={() => { setAuthModalTab("signup"); setShowAuthModal(true); }}
-                    style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", background: "transparent", border: `1px solid ${COLORS.red}`, color: COLORS.red, padding: "10px 15px", fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: "0.78rem", letterSpacing: "0.14em", textTransform: "uppercase", lineHeight: 1, borderRadius: "8px", cursor: "pointer", transition: "all 0.2s" }}
-                    onMouseEnter={e => { e.currentTarget.style.background = COLORS.red; e.currentTarget.style.color = "#fff"; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = COLORS.red; }}
-                  >
-                    Subscribe
-                  </button>
-                )}
               </div>
             </div>
 
@@ -743,7 +737,7 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
         {/* LOGIN */}
         {showLogin && (
           <div className="overlay" onClick={() => setShowLogin(false)}>
-            <div style={{ background: COLORS.navyLight, border: `1px solid ${COLORS.border}`, borderTop: `3px solid ${COLORS.red}`, padding: "2.2rem 1.8rem", maxWidth: 340, width: "90%" }} onClick={e => e.stopPropagation()}>
+            <div style={{ background: "#FFFFFF", border: `1px solid ${COLORS.border}`, borderTop: `3px solid ${COLORS.red}`, padding: "2.2rem 1.8rem", maxWidth: 340, width: "90%", boxShadow: "0 8px 32px rgba(0,0,0,0.15)" }} onClick={e => e.stopPropagation()}>
               <p style={{ fontFamily: "'Playfair Display',serif", fontSize: "1.25rem", color: COLORS.white, marginBottom: "0.35rem" }}>Curator Access</p>
               <p style={{ fontFamily: "'Source Serif 4',serif", fontSize: "0.86rem", color: COLORS.grey, marginBottom: "1.3rem" }}>Enter your password to manage content.</p>
               <input className="fi" type="password" placeholder="Password" value={pwInput} onChange={e => { setPwInput(e.target.value); setPwError(false); }} onKeyDown={e => e.key === "Enter" && handleLogin()} autoFocus style={{ marginBottom: "0.5rem", textAlign: "center" }} />
@@ -765,108 +759,86 @@ export default function HTNNews({ showLoader, onLoaderComplete }) {
       {menuOpen && (
         <div
           onClick={() => setMenuOpen(false)}
-          style={{ position: "fixed", inset: 0, zIndex: 8000, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(3px)", animation: "menuFadeIn 0.2s ease" }}
+          style={{ position: "fixed", inset: 0, zIndex: 8000, background: "rgba(0,0,0,0.5)", backdropFilter: "blur(3px)", animation: "menuFadeIn 0.2s ease" }}
         >
           <div
             onClick={e => e.stopPropagation()}
-            style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: "min(300px, 82vw)", background: COLORS.navy, borderLeft: `3px solid ${COLORS.red}`, display: "flex", flexDirection: "column", animation: "menuSlideIn 0.28s ease" }}
+            style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: "min(320px, 88vw)", background: "#FFFFFF", borderLeft: `3px solid ${COLORS.red}`, display: "flex", flexDirection: "column", animation: "menuSlideIn 0.28s ease", overflowY: "auto" }}
           >
-            {/* Menu header */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.9rem 1.2rem", borderBottom: `1px solid ${COLORS.border}` }}>
-              <img src="/htncrop.png" alt="HTN" style={{ height: 28 }} />
-              <button
-                onClick={() => setMenuOpen(false)}
-                aria-label="Close menu"
-                style={{ background: "none", border: "none", color: COLORS.grey, cursor: "pointer", fontSize: "1.3rem", lineHeight: 1, padding: "0.25rem 0.3rem" }}
-              >✕</button>
+            {/* Header */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.8rem 1.2rem", borderBottom: `1px solid ${COLORS.border}`, flexShrink: 0 }}>
+              <img src="/htncrop.png" alt="HTN" style={{ height: 32 }} />
+              <button onClick={() => setMenuOpen(false)} aria-label="Close menu"
+                style={{ background: "none", border: "none", color: COLORS.grey, cursor: "pointer", fontSize: "1.3rem", lineHeight: 1, padding: "0.25rem 0.3rem" }}>✕</button>
             </div>
 
-            {/* Nav links */}
-            <nav style={{ flex: 1, overflowY: "auto", padding: "0.5rem 1.2rem 2rem" }}>
+            {/* Pages list */}
+            <nav style={{ padding: "0 1.2rem", flexShrink: 0 }}>
               {[
                 { to: "/",          label: "News",             end: true },
+                { to: "/the-pitch", label: "The Pitch" },
+                { to: "/voices",    label: "Voices" },
+                { to: "/media-kit", label: "Press" },
                 { to: "/about",     label: "About" },
                 { to: "/submit",    label: "Submit Your Work" },
-                { to: "/voices",    label: "Voices" },
-                { to: "/the-pitch", label: "The Pitch" },
-                { to: "/media-kit", label: "Press" },
               ].map(({ to, label, end }) => (
-                <NavLink
-                  key={to}
-                  to={to}
-                  end={end}
-                  onClick={() => setMenuOpen(false)}
-                  className={({ isActive }) => `htn-menu-link${isActive ? " active" : ""}`}
-                >
+                <NavLink key={to} to={to} end={end} onClick={() => setMenuOpen(false)}
+                  className={({ isActive }) => `htn-menu-link${isActive ? " active" : ""}`}>
                   {label}
                 </NavLink>
               ))}
             </nav>
 
-            {/* Categories section */}
-            <div style={{ padding: "0.75rem 1.2rem 1rem", borderTop: `1px solid ${COLORS.border}` }}>
-              <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, fontSize: "0.62rem", letterSpacing: "0.18em", color: COLORS.red, textTransform: "uppercase", marginBottom: "0.65rem" }}>Categories</div>
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.1rem" }}>
+            {/* Support HTN block */}
+            <div style={{ margin: "1rem 1.2rem", background: "#C0392B", borderRadius: "8px", padding: "1.1rem 1.1rem 1rem", flexShrink: 0 }}>
+              <p style={{ fontFamily: "'Source Serif 4',serif", fontSize: "0.82rem", color: "#fff", lineHeight: 1.6, marginBottom: "0.8rem" }}>
+                HTN doesn't answer to party lines — it answers to readers like you. $1.99 a month keeps these voices free.
+              </p>
+              <a href="https://ko-fi.com/X8X41XSDD8" target="_blank" rel="noopener noreferrer"
+                style={{ display: "inline-block", background: "#fff", color: "#C0392B", fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, fontSize: "0.78rem", letterSpacing: "0.12em", textTransform: "uppercase", padding: "0.5rem 1rem", borderRadius: "4px", textDecoration: "none" }}>
+                Support HTN →
+              </a>
+            </div>
+
+            {/* Categories — 2-col grid */}
+            <div style={{ padding: "0 1.2rem 1rem", flexShrink: 0 }}>
+              <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, fontSize: "0.6rem", letterSpacing: "0.2em", color: COLORS.grey, textTransform: "uppercase", marginBottom: "0.6rem" }}>Categories</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.4rem" }}>
                 {CATEGORIES.map(c => (
-                  <button
-                    key={c.id}
-                    onClick={() => {
-                      c.id === "all" ? setSearchParams({}) : setSearchParams({ cat: c.id });
-                      setMenuOpen(false);
-                    }}
+                  <button key={c.id}
+                    onClick={() => { c.id === "all" ? setSearchParams({}) : setSearchParams({ cat: c.id }); setMenuOpen(false); }}
                     style={{
-                      background: activeCategory === c.id ? c.color : "none",
-                      border: "none",
-                      color: activeCategory === c.id ? "#fff" : COLORS.grey,
-                      textAlign: "left",
-                      padding: "0.55rem 0.7rem",
-                      fontFamily: "'Barlow Condensed',sans-serif",
-                      fontWeight: 700,
-                      fontSize: "0.82rem",
-                      letterSpacing: "0.06em",
-                      cursor: "pointer",
-                      borderRadius: "4px",
-                      transition: "background 0.15s, color 0.15s",
-                      borderLeft: activeCategory === c.id ? `3px solid rgba(255,255,255,0.4)` : "3px solid transparent",
-                    }}
-                  >
+                      background: activeCategory === c.id ? c.color : c.color + "18",
+                      border: `1px solid ${activeCategory === c.id ? c.color : "transparent"}`,
+                      color: activeCategory === c.id ? "#fff" : c.color,
+                      fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700,
+                      fontSize: "0.72rem", letterSpacing: "0.05em", textTransform: "uppercase",
+                      padding: "0.5rem 0.5rem", borderRadius: "5px", cursor: "pointer", textAlign: "left",
+                    }}>
                     {c.label}
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Sign-in row at bottom */}
-            <div style={{ padding: "1rem 1.2rem", borderTop: `1px solid ${COLORS.border}` }}>
+            {/* Sign in / Subscribe */}
+            <div style={{ padding: "0.75rem 1.2rem 1.2rem", borderTop: `1px solid ${COLORS.border}`, marginTop: "auto", flexShrink: 0 }}>
               {user ? (
-                <button
-                  onClick={() => { signOut(); setMenuOpen(false); }}
-                  style={{ width: "100%", background: "none", border: `1px solid ${COLORS.border}`, color: COLORS.grey, padding: "0.65rem 1rem", fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, fontSize: "0.78rem", letterSpacing: "0.12em", textTransform: "uppercase", cursor: "pointer", transition: "all 0.2s" }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = COLORS.grey; e.currentTarget.style.color = COLORS.offWhite; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = COLORS.border; e.currentTarget.style.color = COLORS.grey; }}
-                >
+                <button onClick={() => { signOut(); setMenuOpen(false); }}
+                  style={{ width: "100%", background: "none", border: `1px solid ${COLORS.border}`, color: COLORS.grey, padding: "0.65rem 1rem", fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, fontSize: "0.78rem", letterSpacing: "0.12em", textTransform: "uppercase", cursor: "pointer" }}>
                   Sign Out
                 </button>
               ) : (
-                <>
-                  <button
-                    onClick={() => { setAuthModalTab("signin"); setShowAuthModal(true); setMenuOpen(false); }}
-                    style={{ width: "100%", background: COLORS.red, border: "none", color: "#fff", padding: "0.75rem 1rem", fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, fontSize: "0.78rem", letterSpacing: "0.14em", textTransform: "uppercase", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", transition: "background 0.2s" }}
-                    onMouseEnter={e => e.currentTarget.style.background = COLORS.redDark}
-                    onMouseLeave={e => e.currentTarget.style.background = COLORS.red}
-                  >
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                  <button onClick={() => { setAuthModalTab("signin"); setShowAuthModal(true); setMenuOpen(false); }}
+                    style={{ width: "100%", background: COLORS.red, border: "none", color: "#fff", padding: "0.7rem 1rem", fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, fontSize: "0.78rem", letterSpacing: "0.14em", textTransform: "uppercase", cursor: "pointer", borderRadius: "4px" }}>
                     Sign In
                   </button>
-                  <button
-                    onClick={() => { setAuthModalTab("signup"); setShowAuthModal(true); setMenuOpen(false); }}
-                    style={{ width: "100%", background: "transparent", border: `1px solid ${COLORS.red}`, color: COLORS.red, padding: "0.75rem 1rem", fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, fontSize: "0.78rem", letterSpacing: "0.14em", textTransform: "uppercase", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", transition: "all 0.2s" }}
-                    onMouseEnter={e => { e.currentTarget.style.background = COLORS.red; e.currentTarget.style.color = "#fff"; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = COLORS.red; }}
-                  >
+                  <button onClick={() => { setAuthModalTab("signup"); setShowAuthModal(true); setMenuOpen(false); }}
+                    style={{ width: "100%", background: "transparent", border: `1px solid ${COLORS.red}`, color: COLORS.red, padding: "0.7rem 1rem", fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 700, fontSize: "0.78rem", letterSpacing: "0.14em", textTransform: "uppercase", cursor: "pointer", borderRadius: "4px" }}>
                     Subscribe
                   </button>
-                </>
+                </div>
               )}
             </div>
           </div>
