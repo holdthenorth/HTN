@@ -26,14 +26,14 @@ const JSONBIN_KEY = import.meta.env.VITE_JSONBIN_KEY;
 const RSS_CACHE_BIN_ID = import.meta.env.VITE_RSS_CACHE_BIN_ID;
 
 const ARTICLE_CATEGORIES = [
-  { id: "politics",     label: "Politics" },
-  { id: "world",        label: "World" },
-  { id: "voices",       label: "Voices" },
-  { id: "street-level", label: "Street Level" },
-  { id: "trump-watch",  label: "Trump Watch" },
-  { id: "the-pitch",    label: "The Pitch" },
-  { id: "on-the-ground",   label: "On the Ground" },
+  { id: "politics",        label: "Politics" },
+  { id: "world",           label: "World" },
+  { id: "voices",          label: "Voices" },
+  { id: "street-level",    label: "Street Level" },
+  { id: "trump-watch",     label: "Trump Watch" },
   { id: "standing-ground", label: "Standing Ground" },
+  { id: "the-squeeze",     label: "The Squeeze" },
+  { id: "health-care",     label: "Health & Care" },
 ];
 
 const SOURCES = [
